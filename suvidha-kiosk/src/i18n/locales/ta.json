@@ -1,0 +1,132 @@
+{
+  "app": { "title": "SUVIDHA குடிமக்கள் கியாஸ்க்" },
+  "common": {
+    "continue": "தொடரவும்",
+    "endSession": "அமர்வை முடிக்கவும்",
+    "logout": "வெளியேறு",
+    "home": "முகப்பு",
+    "help": "உதவி",
+    "print": "அச்சிடு",
+    "retry": "மீண்டும் முயற்சிக்கவும்",
+    "done": "முடிந்தது",
+    "submit": "சமர்ப்பி",
+    "loading": "ஏற்றுகிறது…",
+    "notFound": "கண்டுபிடிக்கப்படவில்லை",
+    "accessDenied": "அனுமதி மறுக்கப்பட்டது",
+    "sessionEndsIn": "அமர்வு முடிவு: {{time}}",
+    "kioskId": "கியாஸ்க்: {{id}}",
+    "dateTime": "{{date}} · {{time}}",
+    "error": "ஏதோ தவறு ஏற்பட்டது"
+  },
+  "rateLimit": { "retryIn": "வரம்பு. {{sec}}s இல் மீண்டும் முயற்சிக்கவும்" },
+  "validation": { "mobile": "மொபைல் 10 இலக்கங்கள் இருக்க வேண்டும்", "otp": "OTP 6 இலக்கங்கள் இருக்க வேண்டும்" },
+  "enum": {
+    "utilityType": { "ELECTRICITY": "மின்சாரம்", "GAS": "எரிவாயு", "WATER": "தண்ணீர்" },
+    "billStatus": { "PENDING": "நிலுவை", "PAID": "செலுத்தியது", "OVERDUE": "காலாவதி" },
+    "grievanceStatus": { "SUBMITTED": "சமர்ப்பித்தது", "IN_PROGRESS": "நடந்து கொண்டிருக்கிறது", "RESOLVED": "தீர்ந்தது", "CLOSED": "மூடியது" },
+    "requestType": { "NEW": "புதிய", "TRANSFER": "மாற்றம்", "SURRENDER": "கைவிடு" },
+    "connectionStatus": { "PENDING": "நிலுவை", "APPROVED": "அங்கீகரிக்கப்பட்டது", "REJECTED": "நிராகரிக்கப்பட்டது" }
+  },
+  "pagination": { "prev": "முந்தைய", "next": "அடுத்த" },
+  "welcome": {
+    "branding": "இந்திய அரசு · SUVIDHA",
+    "selectLanguage": "மொழியைத் தேர்ந்தெடுக்கவும்",
+    "instructionAll": {
+      "en": "Touch your language, then sign in with mobile OTP.",
+      "hi": "अपनी भाषा चुनें, फिर मोबाइल OTP से साइन इन करें।",
+      "te": "మీ భాషను ఎంచుకుని, మొబైల్ OTPతో సైన్ ఇన్ చేయండి.",
+      "ta": "உங்கள் மொழியைத் தேர்வு செய்து, மொபைல் OTP மூலம் உள்நுழையவும்."
+    },
+    "languages": { "en": "English", "hi": "हिंदी", "te": "తెలుగు", "ta": "தமிழ்" }
+  },
+  "auth": {
+    "mobileTitle": "மொபைல் எண்ணை உள்ளிடவும்",
+    "otpTitle": "OTP ஐ உள்ளிடவும்",
+    "profileTitle": "சுயவிவரம் நிறைவு",
+    "mobile": "மொபைல் எண்",
+    "otp": "OTP",
+    "name": "பெயர்",
+    "sendOtp": "OTP அனுப்பு",
+    "verifyOtp": "OTP சரிபார்க்க",
+    "resendOtpIn": "{{sec}}s இல் மீண்டும் அனுப்பு",
+    "resendOtp": "OTP மீண்டும் அனுப்பு",
+    "attemptsLeft": "மீதமுள்ள முயற்சிகள்: {{count}}",
+    "devOtp": "DEV OTP: {{otp}}",
+    "confirmLanguage": "மொழி உறுதி",
+    "start": "தொடங்கு",
+    "clear": "அழி",
+    "delete": "நீக்கு"
+  },
+  "dashboard": {
+    "hello": "வணக்கம், {{name}}!",
+    "tiles": {
+      "payBills": "பில் செலுத்து",
+      "newConnection": "புதிய இணைப்பு",
+      "trackComplaint": "புகார் நிலை",
+      "submitComplaint": "புகார் பதிவு",
+      "viewAccount": "கணக்கு",
+      "downloadReceipt": "ரசீது",
+      "serviceStatus": "சேவை நிலை",
+      "emergencyInfo": "அவசரம்"
+    },
+    "quick": { "emergency": "அவசரம் (112)" }
+  },
+  "billing": {
+    "title": "பில்லிங்",
+    "steps": { "accounts": "கணக்குகள்", "bills": "பில்கள்", "method": "செலுத்தும் முறை", "processing": "செயலாக்கம்", "receipt": "ரசீது" },
+    "noAccounts": "முதல் பயன்பாட்டு கணக்கை இணைக்கவும்",
+    "noBills": "பில்கள் இல்லை",
+    "addAccount": "கணக்கு சேர்",
+    "accountNumber": "கணக்கு எண்",
+    "providerName": "வழங்குநர்",
+    "address": "முகவரி",
+    "utilityType": "பயன்பாடு",
+    "outstanding": "நிலுவை",
+    "dueDate": "கடைசி நாள்",
+    "selectBills": "பில்கள் தேர்வு (அதிகபட்சம் 10)",
+    "total": "மொத்தம்: ₹{{amount}}",
+    "paymentMode": { "UPI": "UPI QR", "CARD": "டெபிட்/கிரெடிட்", "CASH": "பணம்" },
+    "upiId": "UPI ID: {{vpa}}",
+    "confirmPayment": "செலுத்தலை உறுதி",
+    "paymentId": "Payment ID",
+    "signature": "Signature",
+    "processingWait": "உறுதிப்படுத்தல் காத்திருக்கிறது…",
+    "processingTimeout": "நேரம் முடிந்தது. மீண்டும் முயற்சிக்கவும்.",
+    "success": "செலுத்தல் வெற்றி",
+    "failure": "செலுத்தல் தோல்வி"
+  },
+  "grievance": {
+    "title": "புகார்கள்",
+    "tabs": { "submit": "சமர்ப்பி", "mine": "எனது புகார்கள்" },
+    "noGrievances": "இன்னும் புகார் இல்லை",
+    "trackLink": "குறிப்பு எண்ணால் நிலை",
+    "category": "வகை",
+    "description": "விளக்கம்",
+    "attachments": "இணைப்புகள்",
+    "submitSuccess": "சமர்ப்பித்தது: {{ref}}"
+  },
+  "track": { "title": "புகார் நிலை", "reference": "குறிப்பு எண்", "lookup": "தேடு", "timeline": "நேரவரிசை" },
+  "connections": {
+    "title": "இணைப்புகள்",
+    "noRequests": "இன்னும் விண்ணப்பங்கள் இல்லை",
+    "requestType": "விண்ணப்ப வகை",
+    "documents": "ஆவணங்கள்",
+    "submitRequest": "விண்ணப்பிக்க",
+    "myRequests": "என் விண்ணப்பங்கள்",
+    "docOk": "ஆவணம் சேர்க்கப்பட்டது"
+  },
+  "status": { "title": "சேவை நிலை", "note": "சேவை நிலையை பார்க்க உள்நுழையவும், அல்லது புகார் நிலையை பயன்படுத்தவும்." },
+  "admin": {
+    "title": "நிர்வாகம்",
+    "citizensToday": "இன்றைய குடிமக்கள்",
+    "billsPaidToday": "செலுத்திய பில்கள்",
+    "grievancesResolvedToday": "தீர்த்த புகார்கள்",
+    "activeSessions": "செயலில் அமர்வுகள்",
+    "updateStatus": "நிலை மாற்று",
+    "note": "குறிப்பு",
+    "charts": { "payments30": "பில் செலுத்தல்கள் (30 நாட்கள்)", "usage": "சேவை பகிர்வு" },
+    "grievances": "புகார்கள்",
+    "filters": { "status": "நிலை", "utility": "பயன்பாடு" }
+  },
+  "idle": { "title": "நீங்கள் இன்னும் இருக்கிறீர்களா?", "body": "அமர்வு முடிவு: {{time}}" }
+}

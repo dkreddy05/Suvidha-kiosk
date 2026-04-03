@@ -1,0 +1,56 @@
+# ===== OS / Editor =====
+.DS_Store
+Thumbs.db
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code (keep workspace-level settings)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ===== Java / Maven =====
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ===== Node / Frontend =====
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/coverage/
+*.tsbuildinfo
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Local env / secrets =====
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# ===== Spring Boot config (often local / contains DB creds) =====
+**/src/main/resources/application*.yml
+**/src/main/resources/application*.yaml
+**/src/main/resources/application*.properties
+
+# Keep safe templates
+!**/src/main/resources/applicationex.yml
+!**/src/main/resources/applicationex.yaml
+!**/src/main/resources/applicationex.properties

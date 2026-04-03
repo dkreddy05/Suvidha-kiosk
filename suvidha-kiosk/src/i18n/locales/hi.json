@@ -1,0 +1,132 @@
+{
+  "app": { "title": "SUVIDHA नागरिक कियोस्क" },
+  "common": {
+    "continue": "जारी रखें",
+    "endSession": "सत्र समाप्त करें",
+    "logout": "लॉगआउट",
+    "home": "होम",
+    "help": "सहायता",
+    "print": "प्रिंट",
+    "retry": "पुनः प्रयास",
+    "done": "पूर्ण",
+    "submit": "जमा करें",
+    "loading": "लोड हो रहा है…",
+    "notFound": "नहीं मिला",
+    "accessDenied": "पहुंच अस्वीकृत",
+    "sessionEndsIn": "सत्र समाप्त: {{time}}",
+    "kioskId": "कियोस्क: {{id}}",
+    "dateTime": "{{date}} · {{time}}",
+    "error": "कुछ गलत हो गया"
+  },
+  "rateLimit": { "retryIn": "सीमा पार। {{sec}}s में पुनः प्रयास" },
+  "validation": { "mobile": "मोबाइल 10 अंकों का होना चाहिए", "otp": "OTP 6 अंकों का होना चाहिए" },
+  "enum": {
+    "utilityType": { "ELECTRICITY": "बिजली", "GAS": "गैस", "WATER": "पानी" },
+    "billStatus": { "PENDING": "लंबित", "PAID": "भुगतान", "OVERDUE": "अतिदेय" },
+    "grievanceStatus": { "SUBMITTED": "जमा", "IN_PROGRESS": "प्रगति में", "RESOLVED": "सुलझा", "CLOSED": "बंद" },
+    "requestType": { "NEW": "नया", "TRANSFER": "स्थानांतरण", "SURRENDER": "समर्पण" },
+    "connectionStatus": { "PENDING": "लंबित", "APPROVED": "स्वीकृत", "REJECTED": "अस्वीकृत" }
+  },
+  "pagination": { "prev": "पिछला", "next": "अगला" },
+  "welcome": {
+    "branding": "भारत सरकार · SUVIDHA",
+    "selectLanguage": "भाषा चुनें",
+    "instructionAll": {
+      "en": "Touch your language, then sign in with mobile OTP.",
+      "hi": "अपनी भाषा चुनें, फिर मोबाइल OTP से साइन इन करें।",
+      "te": "మీ భాషను ఎంచుకుని, మొబైల్ OTPతో సైన్ ఇన్ చేయండి.",
+      "ta": "உங்கள் மொழியைத் தேர்வு செய்து, மொபைல் OTP மூலம் உள்நுழையவும்."
+    },
+    "languages": { "en": "English", "hi": "हिंदी", "te": "తెలుగు", "ta": "தமிழ்" }
+  },
+  "auth": {
+    "mobileTitle": "मोबाइल नंबर दर्ज करें",
+    "otpTitle": "OTP दर्ज करें",
+    "profileTitle": "प्रोफाइल पूर्ण करें",
+    "mobile": "मोबाइल नंबर",
+    "otp": "OTP",
+    "name": "नाम",
+    "sendOtp": "OTP भेजें",
+    "verifyOtp": "OTP सत्यापित करें",
+    "resendOtpIn": "{{sec}}s में पुनः भेजें",
+    "resendOtp": "OTP पुनः भेजें",
+    "attemptsLeft": "बचे प्रयास: {{count}}",
+    "devOtp": "DEV OTP: {{otp}}",
+    "confirmLanguage": "भाषा पुष्टि",
+    "start": "शुरू",
+    "clear": "साफ़",
+    "delete": "हटाएं"
+  },
+  "dashboard": {
+    "hello": "नमस्ते, {{name}}!",
+    "tiles": {
+      "payBills": "बिल भुगतान",
+      "newConnection": "नया कनेक्शन",
+      "trackComplaint": "शिकायत ट्रैक",
+      "submitComplaint": "शिकायत दर्ज",
+      "viewAccount": "खाता देखें",
+      "downloadReceipt": "रसीद डाउनलोड",
+      "serviceStatus": "सेवा स्थिति",
+      "emergencyInfo": "आपात जानकारी"
+    },
+    "quick": { "emergency": "आपात (112)" }
+  },
+  "billing": {
+    "title": "बिलिंग",
+    "steps": { "accounts": "खाते", "bills": "बिल", "method": "भुगतान", "processing": "प्रक्रिया", "receipt": "रसीद" },
+    "noAccounts": "अपना पहला उपयोगिता खाता लिंक करें",
+    "noBills": "कोई बिल उपलब्ध नहीं",
+    "addAccount": "खाता जोड़ें",
+    "accountNumber": "खाता संख्या",
+    "providerName": "प्रदाता",
+    "address": "पता",
+    "utilityType": "उपयोगिता",
+    "outstanding": "बकाया",
+    "dueDate": "देय तिथि",
+    "selectBills": "बिल चुनें (अधिकतम 10)",
+    "total": "कुल: ₹{{amount}}",
+    "paymentMode": { "UPI": "UPI QR", "CARD": "डेबिट/क्रेडिट", "CASH": "नकद" },
+    "upiId": "UPI ID: {{vpa}}",
+    "confirmPayment": "भुगतान पुष्टि",
+    "paymentId": "Payment ID",
+    "signature": "Signature",
+    "processingWait": "पुष्टि की प्रतीक्षा…",
+    "processingTimeout": "समय समाप्त। पुनः प्रयास करें।",
+    "success": "भुगतान सफल",
+    "failure": "भुगतान विफल"
+  },
+  "grievance": {
+    "title": "शिकायतें",
+    "tabs": { "submit": "जमा", "mine": "मेरी" },
+    "noGrievances": "अब तक कोई शिकायत नहीं",
+    "trackLink": "संदर्भ से ट्रैक",
+    "category": "श्रेणी",
+    "description": "विवरण",
+    "attachments": "संलग्नक",
+    "submitSuccess": "जमा: {{ref}}"
+  },
+  "track": { "title": "शिकायत ट्रैक", "reference": "संदर्भ संख्या", "lookup": "खोजें", "timeline": "टाइमलाइन" },
+  "connections": {
+    "title": "कनेक्शन",
+    "noRequests": "अब तक कोई अनुरोध नहीं",
+    "requestType": "अनुरोध प्रकार",
+    "documents": "दस्तावेज",
+    "submitRequest": "अनुरोध जमा",
+    "myRequests": "मेरे अनुरोध",
+    "docOk": "दस्तावेज जोड़ा गया"
+  },
+  "status": { "title": "सेवा स्थिति", "note": "स्थिति देखने के लिए साइन इन करें, या शिकायत ट्रैकिंग उपयोग करें।" },
+  "admin": {
+    "title": "एडमिन",
+    "citizensToday": "आज नागरिक",
+    "billsPaidToday": "भुगतान बिल",
+    "grievancesResolvedToday": "सुलझी शिकायतें",
+    "activeSessions": "सक्रिय सत्र",
+    "updateStatus": "स्थिति अपडेट",
+    "note": "नोट",
+    "charts": { "payments30": "बिल भुगतान (30 दिन)", "usage": "सेवा वितरण" },
+    "grievances": "शिकायतें",
+    "filters": { "status": "स्थिति", "utility": "उपयोगिता" }
+  },
+  "idle": { "title": "क्या आप अभी भी हैं?", "body": "सत्र समाप्त: {{time}}" }
+}

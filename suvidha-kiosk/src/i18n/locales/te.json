@@ -1,0 +1,132 @@
+{
+  "app": { "title": "SUVIDHA పౌర కియోస్క్" },
+  "common": {
+    "continue": "కొనసాగించండి",
+    "endSession": "సెషన్ ముగించండి",
+    "logout": "లాగ్ అవుట్",
+    "home": "హోమ్",
+    "help": "సహాయం",
+    "print": "ప్రింట్",
+    "retry": "మళ్లీ ప్రయత్నించండి",
+    "done": "పూర్తి",
+    "submit": "సమర్పించండి",
+    "loading": "లోడ్ అవుతోంది…",
+    "notFound": "కనబడలేదు",
+    "accessDenied": "ప్రవేశం నిరాకరించబడింది",
+    "sessionEndsIn": "సెషన్ ముగింపు: {{time}}",
+    "kioskId": "కియోస్క్: {{id}}",
+    "dateTime": "{{date}} · {{time}}",
+    "error": "ఏదో తప్పు జరిగింది"
+  },
+  "rateLimit": { "retryIn": "పరిమితి. {{sec}}s లో మళ్లీ ప్రయత్నించండి" },
+  "validation": { "mobile": "మొబైల్ 10 అంకెలు కావాలి", "otp": "OTP 6 అంకెలు కావాలి" },
+  "enum": {
+    "utilityType": { "ELECTRICITY": "విద్యుత్", "GAS": "గ్యాస్", "WATER": "నీరు" },
+    "billStatus": { "PENDING": "పెండింగ్", "PAID": "చెల్లించారు", "OVERDUE": "అతిక్రమించిన" },
+    "grievanceStatus": { "SUBMITTED": "సమర్పించారు", "IN_PROGRESS": "ప్రాసెస్‌లో", "RESOLVED": "పరిష్కారం", "CLOSED": "మూసారు" },
+    "requestType": { "NEW": "కొత్త", "TRANSFER": "బదిలీ", "SURRENDER": "సరెండర్" },
+    "connectionStatus": { "PENDING": "పెండింగ్", "APPROVED": "అనుమతి", "REJECTED": "నిరాకరణ" }
+  },
+  "pagination": { "prev": "ముందు", "next": "తర్వాత" },
+  "welcome": {
+    "branding": "భారత ప్రభుత్వం · SUVIDHA",
+    "selectLanguage": "భాషను ఎంచుకోండి",
+    "instructionAll": {
+      "en": "Touch your language, then sign in with mobile OTP.",
+      "hi": "अपनी भाषा चुनें, फिर मोबाइल OTP से साइन इन करें।",
+      "te": "మీ భాషను ఎంచుకుని, మొబైల్ OTPతో సైన్ ఇన్ చేయండి.",
+      "ta": "உங்கள் மொழியைத் தேர்வு செய்து, மொபைல் OTP மூலம் உள்நுழையவும்."
+    },
+    "languages": { "en": "English", "hi": "हिंदी", "te": "తెలుగు", "ta": "தமிழ்" }
+  },
+  "auth": {
+    "mobileTitle": "మొబైల్ నంబర్ నమోదు చేయండి",
+    "otpTitle": "OTP నమోదు చేయండి",
+    "profileTitle": "ప్రొఫైల్ పూర్తి చేయండి",
+    "mobile": "మొబైల్ నంబర్",
+    "otp": "OTP",
+    "name": "పేరు",
+    "sendOtp": "OTP పంపండి",
+    "verifyOtp": "OTP ధృవీకరించండి",
+    "resendOtpIn": "{{sec}}s లో మళ్లీ పంపండి",
+    "resendOtp": "OTP మళ్లీ పంపండి",
+    "attemptsLeft": "మిగిలిన ప్రయత్నాలు: {{count}}",
+    "devOtp": "DEV OTP: {{otp}}",
+    "confirmLanguage": "భాష నిర్ధారించండి",
+    "start": "ప్రారంభించండి",
+    "clear": "క్లియర్",
+    "delete": "డిలీట్"
+  },
+  "dashboard": {
+    "hello": "హలో, {{name}}!",
+    "tiles": {
+      "payBills": "బిల్లులు చెల్లించండి",
+      "newConnection": "కొత్త కనెక్షన్",
+      "trackComplaint": "ఫిర్యాదు ట్రాక్",
+      "submitComplaint": "ఫిర్యాదు సమర్పించండి",
+      "viewAccount": "ఖాతా చూడండి",
+      "downloadReceipt": "రసీదు డౌన్‌లోడ్",
+      "serviceStatus": "సేవ స్థితి",
+      "emergencyInfo": "అత్యవసరం"
+    },
+    "quick": { "emergency": "అత్యవసరం (112)" }
+  },
+  "billing": {
+    "title": "బిల్లింగ్",
+    "steps": { "accounts": "ఖాతాలు", "bills": "బిల్లులు", "method": "చెల్లింపు", "processing": "ప్రాసెసింగ్", "receipt": "రసీదు" },
+    "noAccounts": "మీ మొదటి యుటిలిటీ ఖాతాను లింక్ చేయండి",
+    "noBills": "బిల్లులు లేవు",
+    "addAccount": "ఖాతా జోడించండి",
+    "accountNumber": "ఖాతా సంఖ్య",
+    "providerName": "ప్రొవైడర్",
+    "address": "చిరునామా",
+    "utilityType": "యుటిలిటీ",
+    "outstanding": "బకాయి",
+    "dueDate": "డ్యూ తేదీ",
+    "selectBills": "బిల్లులు ఎంచుకోండి (గరిష్టం 10)",
+    "total": "మొత్తం: ₹{{amount}}",
+    "paymentMode": { "UPI": "UPI QR కోడ్", "CARD": "డెబిట్/క్రెడిట్", "CASH": "నగదు" },
+    "upiId": "UPI ID: {{vpa}}",
+    "confirmPayment": "చెల్లింపు నిర్ధారణ",
+    "paymentId": "Payment ID",
+    "signature": "Signature",
+    "processingWait": "నిర్ధారణ కోసం వేచిచూస్తోంది…",
+    "processingTimeout": "సమయం ముగిసింది. మళ్లీ ప్రయత్నించండి.",
+    "success": "చెల్లింపు విజయవంతం",
+    "failure": "చెల్లింపు విఫలం"
+  },
+  "grievance": {
+    "title": "ఫిర్యాదులు",
+    "tabs": { "submit": "సమర్పించండి", "mine": "నా ఫిర్యాదులు" },
+    "noGrievances": "ఇంకా ఫిర్యాదులు లేవు",
+    "trackLink": "రిఫరెన్స్‌తో ట్రాక్",
+    "category": "వర్గం",
+    "description": "వివరణ",
+    "attachments": "అటాచ్‌మెంట్స్",
+    "submitSuccess": "సమర్పించబడింది: {{ref}}"
+  },
+  "track": { "title": "ఫిర్యాదు ట్రాక్", "reference": "రిఫరెన్స్ నంబర్", "lookup": "వెతకండి", "timeline": "టైమ్‌లైన్" },
+  "connections": {
+    "title": "కనెక్షన్లు",
+    "noRequests": "ఇంకా అభ్యర్థనలు లేవు",
+    "requestType": "అభ్యర్థన రకం",
+    "documents": "పత్రాలు",
+    "submitRequest": "అభ్యర్థన సమర్పించండి",
+    "myRequests": "నా అభ్యర్థనలు",
+    "docOk": "డాక్యుమెంట్ జోడించబడింది"
+  },
+  "status": { "title": "సేవ స్థితి", "note": "సేవ స్థితి కోసం సైన్ ఇన్ చేయండి, లేదా ఫిర్యాదు ట్రాకింగ్ ఉపయోగించండి." },
+  "admin": {
+    "title": "అడ్మిన్",
+    "citizensToday": "ఈ రోజు పౌరులు",
+    "billsPaidToday": "చెల్లించిన బిల్లులు",
+    "grievancesResolvedToday": "పరిష్కరించిన ఫిర్యాదులు",
+    "activeSessions": "సక్రియ సెషన్లు",
+    "updateStatus": "స్థితి అప్‌డేట్",
+    "note": "నోట్",
+    "charts": { "payments30": "బిల్ చెల్లింపులు (30 రోజులు)", "usage": "సేవ పంపిణీ" },
+    "grievances": "ఫిర్యాదులు",
+    "filters": { "status": "స్థితి", "utility": "యుటిలిటీ" }
+  },
+  "idle": { "title": "మీరు ఇంకా ఉన్నారా?", "body": "సెషన్ ముగింపు: {{time}}" }
+}
