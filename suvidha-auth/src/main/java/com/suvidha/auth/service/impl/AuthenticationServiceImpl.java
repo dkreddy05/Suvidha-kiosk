@@ -142,7 +142,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new VerifyOtpResponse(storedMobile, true, false, null);
             }
             String token = jwtToken.generateToken(storedMobile);
-            return new VerifyOtpResponse(storedMobile, true, true);
+            return new VerifyOtpResponse(storedMobile, true, true, token);
         } catch (InvalidRequestException | OtpSessionInvalidException | OtpMobileMismatchException
                 | OtpMaxAttemptsExceededException | OtpIncorrectException e) {
             throw e;

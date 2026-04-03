@@ -11,7 +11,6 @@ import com.suvidha.auth.exception.UserAlreadyExistsException;
 import com.suvidha.auth.model.UsersAuth;
 import com.suvidha.auth.repo.UserAuthRepo;
 import com.suvidha.auth.service.UserService;
-
 import java.time.Instant;
 import java.util.Map;
 

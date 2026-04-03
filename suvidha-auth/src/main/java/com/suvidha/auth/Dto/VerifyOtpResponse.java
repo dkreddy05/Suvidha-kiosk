@@ -16,6 +16,12 @@ public class VerifyOtpResponse {
         this.token = token;
     }
 
+    public VerifyOtpResponse(String mobile, boolean verified, boolean registered) {
+        this.mobile = mobile;
+        this.verified = verified;
+        this.registered = registered;
+    }
+
     public String getMobile() {
         return mobile;
     }
