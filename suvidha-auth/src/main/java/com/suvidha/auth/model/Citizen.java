@@ -9,10 +9,11 @@ import com.suvidha.auth.Dto.Role;
 @Getter
 @Setter
 @Entity
-@Table(name = "users_auth", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "mobile")
+@Table(name = "citizens_table", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "mobile"),
+        @UniqueConstraint(columnNames = "aadhar")
 })
-public class UsersAuth {
+public class Citizen {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
@@ -20,6 +21,7 @@ public class UsersAuth {
     @Column(nullable = false)
     private String mobile;
 
+    @Column(unique = true)
     private String aadhar;
     private String name;
     private String languagePreference;
@@ -29,10 +31,10 @@ public class UsersAuth {
 
     private Instant createdAt;
 
-    public UsersAuth() {
+    public Citizen() {
     }
 
-    public UsersAuth(String mobile, String aadhar,
+    public Citizen(String mobile, String aadhar,
             String name, String languagePreference,
             Role role, Instant createdAt) {
         this.mobile = mobile;

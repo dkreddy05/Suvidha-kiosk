@@ -1,13 +1,13 @@
 package com.suvidha.auth.mapper;
 
 import com.suvidha.auth.Dto.UserAuthDto;
-import com.suvidha.auth.model.UsersAuth;
+import com.suvidha.auth.model.Citizen;
 
 import java.time.Instant;
 
 public class Mapper {
 
-    public static UserAuthDto toDto(UsersAuth userAuth) {
+    public static UserAuthDto toDto(Citizen userAuth) {
         if (userAuth == null) {
             return null;
         }
@@ -20,12 +20,12 @@ public class Mapper {
         return userAuthDto;
     }
 
-    public static UsersAuth toEntity(UserAuthDto dto) {
+    public static Citizen toEntity(UserAuthDto dto) {
         if (dto == null) {
             return null;
         }
 
-        UsersAuth usersAuth = new UsersAuth();
+        Citizen usersAuth = new Citizen();
         usersAuth.setMobile(dto.getMobile());
         usersAuth.setAadhar(dto.getAadhar());
         usersAuth.setName(dto.getName());

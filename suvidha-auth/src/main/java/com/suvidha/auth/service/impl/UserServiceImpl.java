@@ -8,8 +8,8 @@ import com.suvidha.auth.Dto.UserAuthDto;
 import com.suvidha.auth.exception.InvalidRequestException;
 import com.suvidha.auth.exception.SessionNotVerifiedException;
 import com.suvidha.auth.exception.UserAlreadyExistsException;
-import com.suvidha.auth.model.UsersAuth;
-import com.suvidha.auth.repo.UserAuthRepo;
+import com.suvidha.auth.model.Citizen;
+import com.suvidha.auth.repo.CitizenRepo;
 import com.suvidha.auth.service.UserService;
 import java.time.Instant;
 import java.util.Map;
@@ -17,13 +17,13 @@ import java.util.Map;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final UserAuthRepo userAuthRepo;
+    private final CitizenRepo citizenRepo;
     private final StringRedisTemplate template;
 
     private static final String SESSION_PREFIX = "session";
 
-    public UserServiceImpl(UserAuthRepo userAuthRepo, StringRedisTemplate template) {
-        this.userAuthRepo = userAuthRepo;
+    public UserServiceImpl(CitizenRepo citizenRepo, StringRedisTemplate template) {
+        this.citizenRepo = citizenRepo;
         this.template = template;
     }
 
@@ -38,12 +38,17 @@ public class UserServiceImpl implements UserService {
             throw new InvalidRequestException(
                     "All fields (sessionId, mobile, aadhar, name, languagePreference, role) are required.");
         }
-        if (userAuthRepo.findByMobile(request.getMobile()).isPresent()) {
+
+        // Normalize inputs so uniqueness checks can't be bypassed via whitespace.
+        String mobile = request.getMobile().trim();
+        String aadhar = request.getAadhar().trim();
+
+        if (citizenRepo.findByMobile(mobile).isPresent()) {
             throw new UserAlreadyExistsException(
-                    "User with mobile " + request.getMobile() + " already exists.");
+                    "User with mobile " + mobile + " already exists.");
         }
 
-        if (userAuthRepo.findByAadhar(request.getAadhar()).isPresent()) {
+        if (citizenRepo.findByAadhar(aadhar).isPresent()) {
             throw new UserAlreadyExistsException(
                     "User with this Aadhar number is already registered.");
         }
@@ -61,24 +66,24 @@ public class UserServiceImpl implements UserService {
                     "Session is not verified. Please complete OTP verification.");
         }
         String sessionMobile = (String) sessionData.get("mobile");
-        if (!request.getMobile().equals(sessionMobile)) {
+        if (!mobile.equals(sessionMobile)) {
             throw new InvalidRequestException(
                     "Mobile number does not match the verified session.");
         }
 
-        UsersAuth newUser = new UsersAuth(
-                request.getMobile(),
-                request.getAadhar(),
-                request.getName(),
-                request.getLanguagePreference(),
+        Citizen newUser = new Citizen(
+                mobile,
+                aadhar,
+                request.getName().trim(),
+                request.getLanguagePreference().trim(),
                 request.getRole(),
                 Instant.now());
-        UsersAuth savedUser = userAuthRepo.save(newUser);
+        Citizen savedUser = citizenRepo.save(newUser);
         template.delete(sessionKey);
         return toDto(savedUser);
     }
 
-    private UserAuthDto toDto(UsersAuth user) {
+    private UserAuthDto toDto(Citizen user) {
         UserAuthDto dto = new UserAuthDto();
         dto.setId(user.getId());
         dto.setMobile(user.getMobile());

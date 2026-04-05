@@ -2,27 +2,20 @@
 .DS_Store
 Thumbs.db
 
-# IntelliJ / JetBrains
+
 .idea/
 *.iml
-
-# Eclipse
 .classpath
 .project
 .settings/
-
-# VS Code (keep workspace-level settings)
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-
-# ===== Java / Maven =====
 **/target/
 *.class
 *.jar
 *.war
 *.ear
-
 # ===== Node / Frontend =====
 **/node_modules/
 **/dist/

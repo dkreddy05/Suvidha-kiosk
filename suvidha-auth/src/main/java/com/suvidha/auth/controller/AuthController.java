@@ -7,8 +7,8 @@ import com.suvidha.auth.Dto.RefreshTokenResponseDTO;
 import com.suvidha.auth.Dto.RegisterRequest;
 import com.suvidha.auth.Dto.VerifyOtpResponse;
 import com.suvidha.auth.Dto.VerifyOtpResponseDTO;
-import com.suvidha.auth.repo.UserAuthRepo;
-import com.suvidha.auth.model.UsersAuth;
+import com.suvidha.auth.repo.CitizenRepo;
+import com.suvidha.auth.model.Citizen;
 import com.suvidha.auth.service.AuthenticationService;
 import com.suvidha.auth.service.UserService;
 import java.util.Map;
@@ -27,17 +27,17 @@ public class AuthController {
 
     private final AuthenticationService authenticationService;
     private final UserService userService;
-    private final UserAuthRepo userAuthRepo;
+    private final CitizenRepo citizenRepo;
     private final JwtToken jwtToken;
 
     public AuthController(
             AuthenticationService authenticationService,
             UserService userService,
-            UserAuthRepo userAuthRepo,
+            CitizenRepo citizenRepo,
             JwtToken jwtToken) {
         this.authenticationService = authenticationService;
         this.userService = userService;
-        this.userAuthRepo = userAuthRepo;
+        this.citizenRepo = citizenRepo;
         this.jwtToken = jwtToken;
     }
 
@@ -66,8 +66,7 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<CitizenDTO> profile() {
         String mobile = getAuthenticatedMobile();
-        // If user isn't registered yet, return a minimal profile.
-        CitizenDTO citizen = buildCitizen(mobile, userAuthRepo.findByMobile(mobile).isPresent());
+        CitizenDTO citizen = buildCitizen(mobile, citizenRepo.findByMobile(mobile).isPresent());
         return ResponseEntity.ok(citizen);
     }
 
@@ -80,14 +79,11 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
-        // Stateless JWT: client-side logout (token discard).
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody RegisterRequest request) {
-        // Registration contract for kiosk is not finalized; keep existing service behavior but
-        // avoid wrapping in ApiResponse so the frontend can consume it directly.
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerUser(request));
     }
 
@@ -99,14 +95,13 @@ public class AuthController {
 
     private CitizenDTO buildCitizen(String mobile, boolean registered) {
         if (mobile == null || mobile.isBlank()) {
-            // Defensive default; should not happen for authenticated routes.
             return new CitizenDTO("", "", null, null, "en", Instant.now());
         }
 
         if (registered) {
-            Optional<UsersAuth> userOpt = userAuthRepo.findByMobile(mobile);
+            Optional<Citizen> userOpt = citizenRepo.findByMobile(mobile);
             if (userOpt.isPresent()) {
-                UsersAuth user = userOpt.get();
+                Citizen user = userOpt.get();
                 String aadhar = user.getAadhar();
                 String aadhaarLast4 = aadhar != null && aadhar.length() >= 4 ? aadhar.substring(aadhar.length() - 4)
                         : null;
@@ -118,7 +113,6 @@ public class AuthController {
             }
         }
 
-        // New user: minimal identity.
         return new CitizenDTO(mobile, mobile, null, null, "en", Instant.now());
     }
 }

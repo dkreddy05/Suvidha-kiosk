@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import com.suvidha.auth.Dto.VerifyOtpResponse;
-import com.suvidha.auth.model.UsersAuth;
+import com.suvidha.auth.model.Citizen;
 import com.suvidha.auth.exception.InvalidRequestException;
 import com.suvidha.auth.exception.OtpIncorrectException;
 import com.suvidha.auth.exception.OtpMaxAttemptsExceededException;
@@ -21,13 +21,13 @@ import com.suvidha.auth.exception.OtpSessionInvalidException;
 import com.suvidha.auth.exception.OtpVerifyFailedException;
 import com.suvidha.auth.token.JwtToken;
 import java.time.Duration;
-import com.suvidha.auth.repo.UserAuthRepo;
+import com.suvidha.auth.repo.CitizenRepo;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
     private BCryptPasswordEncoder encoder;
     private StringRedisTemplate template;
-    private UserAuthRepo userAuthRepo;
+    private CitizenRepo citizenRepo;
     private final SecureRandom secureRandom;
     private static final String OTP_PREFIX = "otp";
     private static final String SESSION_PREFIX = "session";
@@ -38,10 +38,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private static final Duration VERIFIED_SESSION_TTL = Duration.ofMinutes(10);
 
     public AuthenticationServiceImpl(BCryptPasswordEncoder encoder, StringRedisTemplate template,
-            UserAuthRepo userAuthRepo, JwtToken jwtToken) {
+            CitizenRepo citizenRepo, JwtToken jwtToken) {
         this.encoder = encoder;
         this.template = template;
-        this.userAuthRepo = userAuthRepo;
+        this.citizenRepo = citizenRepo;
         this.secureRandom = new SecureRandom();
         this.jwtToken = jwtToken;
     }
@@ -137,11 +137,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             template.opsForHash().putAll(sessionKey, sessionData);
             template.expire(sessionKey, VERIFIED_SESSION_TTL);
             template.delete(otpKey);
-            UsersAuth user = userAuthRepo.findByMobile(storedMobile).orElse(null);
-            if (user == null) {
+            Citizen citizen = citizenRepo.findByMobile(storedMobile).orElse(null);
+            if (citizen == null) {
                 return new VerifyOtpResponse(storedMobile, true, false, null);
             }
-            String token = jwtToken.generateToken(storedMobile);
+            String token = jwtToken.generateToken(citizen.getId(), storedMobile, citizen.getName());
             return new VerifyOtpResponse(storedMobile, true, true, token);
         } catch (InvalidRequestException | OtpSessionInvalidException | OtpMobileMismatchException
                 | OtpMaxAttemptsExceededException | OtpIncorrectException e) {

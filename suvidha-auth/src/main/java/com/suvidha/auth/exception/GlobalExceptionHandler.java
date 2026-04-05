@@ -2,6 +2,7 @@ package com.suvidha.auth.exception;
 
 import com.suvidha.auth.Dto.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -112,6 +113,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .header(REQUEST_ID_HEADER, rid)
                 .body(ApiErrorResponse.of(ex.getCode(), ex.getMessage(), rid));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
+            HttpServletRequest request) {
+        String rid = requestId(request);
+
+        String raw = null;
+        if (ex.getMostSpecificCause() != null) {
+            raw = ex.getMostSpecificCause().getMessage();
+        }
+        if (raw == null) {
+            raw = ex.getMessage();
+        }
+
+        String msg = "User already exists.";
+        String lower = raw != null ? raw.toLowerCase() : "";
+        if (lower.contains("aadhar")) {
+            msg = "User with this Aadhar number is already registered.";
+        } else if (lower.contains("mobile")) {
+            msg = "User with this mobile number is already registered.";
+        }
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .header(REQUEST_ID_HEADER, rid)
+                .body(ApiErrorResponse.of("USER_ALREADY_EXISTS", msg, rid));
     }
 
     @ExceptionHandler(Exception.class)
