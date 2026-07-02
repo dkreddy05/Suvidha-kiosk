@@ -20,7 +20,7 @@ public class Citizen {
     private String id;
     @Column(nullable = false)
     private String mobile;
-
+    @Convert(converter = AadharEncryptionConverter.class)
     @Column(unique = true)
     private String aadhar;
     private String name;
@@ -28,6 +28,9 @@ public class Citizen {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(name = "consumer_id", unique = true, nullable = false, length = 50)
+    private String consumerId;
 
     private Instant createdAt;
 
@@ -99,5 +102,13 @@ public class Citizen {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(String consumerId) {
+        this.consumerId = consumerId;
     }
 }

@@ -12,4 +12,6 @@ public interface CitizenRepo extends JpaRepository<Citizen, String> {
     Optional<Citizen> findByAadhar(String aadhar);
 
     Optional<Citizen> findByAadharAndMobile(String aadhar, String mobile);
+
+    Optional<Citizen> findByConsumerId(String consumerId);
 }

@@ -23,17 +23,30 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                  .authorizeHttpRequests(auth -> auth
-                         .requestMatchers(
-                                 "/api/auth/health/**",
-                                 "/api/v1/auth/health/**",
-                                 "/api/auth/send-otp/**",
-                                 "/api/v1/auth/send-otp/**",
-                                 "/api/auth/verify-otp/**",
-                                 "/api/v1/auth/verify-otp/**",
-                                 "/api/auth/register/**",
-                                 "/api/v1/auth/register/**")
-                         .permitAll()
-                         .anyRequest().authenticated())
+                          .requestMatchers(
+                                  "/api/auth/health/**",
+                                  "/api/v1/auth/health/**",
+                                  "/api/auth/send-otp",
+                                  "/api/auth/send-otp/**",
+                                  "/api/v1/auth/send-otp",
+                                  "/api/v1/auth/send-otp/**",
+                                  "/api/auth/verify-otp",
+                                  "/api/auth/verify-otp/**",
+                                  "/api/v1/auth/verify-otp",
+                                  "/api/v1/auth/verify-otp/**",
+                                  "/api/auth/register",
+                                  "/api/auth/register/**",
+                                  "/api/v1/auth/register",
+                                  "/api/v1/auth/register/**",
+                                  "/api/auth/refresh-token",
+                                  "/api/auth/refresh-token/**",
+                                  "/api/v1/auth/refresh-token",
+                                  "/api/v1/auth/refresh-token/**",
+                                  "/api/auth/public-key",
+                                  "/api/v1/auth/public-key",
+                                  "/actuator/**")
+                          .permitAll()
+                          .anyRequest().authenticated())
                 .addFilterBefore(jwtAuth, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

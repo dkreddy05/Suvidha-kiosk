@@ -3,16 +3,14 @@ package com.suvidha.auth.Dto;
 public class UserAuthDto {
     private String Id;
     private String mobile;
-    private String aadhar;
     private String name;
     private String languagePreference;
     private String role;
+    private String consumerId;
 
-    public UserAuthDto(String Id, String mobile, String aadhar, String name, String languagePreference,
-            String role) {
+    public UserAuthDto(String Id, String mobile, String name, String languagePreference, String role) {
         this.Id = Id;
         this.mobile = mobile;
-        this.aadhar = aadhar;
         this.name = name;
         this.languagePreference = languagePreference;
         this.role = role;
@@ -35,14 +33,6 @@ public class UserAuthDto {
 
     public void setMobile(String mobile) {
         this.mobile = mobile;
-    }
-
-    public String getAadhar() {
-        return aadhar;
-    }
-
-    public void setAadhar(String aadhar) {
-        this.aadhar = aadhar;
     }
 
     public String getName() {
@@ -69,4 +59,11 @@ public class UserAuthDto {
         this.role = role;
     }
 
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(String consumerId) {
+        this.consumerId = consumerId;
+    }
 }

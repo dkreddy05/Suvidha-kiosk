@@ -23,6 +23,8 @@ Thumbs.db
 **/.vite/
 **/coverage/
 *.tsbuildinfo
+**/.next/
+.next/
 
 # ===== Logs =====
 logs/
@@ -38,6 +40,9 @@ pnpm-debug.log*
 !.env.example
 !.env.*.example
 
+# ===== Request verification (contains OTP/session secrets) =====
+req_verify.json
+
 # ===== Spring Boot config (often local / contains DB creds) =====
 **/src/main/resources/application*.yml
 **/src/main/resources/application*.yaml
@@ -47,3 +52,7 @@ pnpm-debug.log*
 !**/src/main/resources/applicationex.yml
 !**/src/main/resources/applicationex.yaml
 !**/src/main/resources/applicationex.properties
+
+# ===== Local SSL Certs & Backups =====
+certs/
+backups/

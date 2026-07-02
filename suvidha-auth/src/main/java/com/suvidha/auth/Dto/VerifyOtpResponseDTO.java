@@ -4,16 +4,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class VerifyOtpResponseDTO {
     private String accessToken;
+    private String refreshToken;
     private CitizenDTO citizen;
-    private boolean isNewUser;
+
+    @JsonProperty("isNewUser")
+    private boolean newUser;
 
     public VerifyOtpResponseDTO() {
     }
 
-    public VerifyOtpResponseDTO(String accessToken, CitizenDTO citizen, boolean isNewUser) {
+    public VerifyOtpResponseDTO(String accessToken, String refreshToken, CitizenDTO citizen, boolean newUser) {
         this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.citizen = citizen;
-        this.isNewUser = isNewUser;
+        this.newUser = newUser;
     }
 
     public String getAccessToken() {
@@ -22,6 +26,14 @@ public class VerifyOtpResponseDTO {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public CitizenDTO getCitizen() {
@@ -34,10 +46,10 @@ public class VerifyOtpResponseDTO {
 
     @JsonProperty("isNewUser")
     public boolean isNewUser() {
-        return isNewUser;
+        return newUser;
     }
 
-    public void setNewUser(boolean isNewUser) {
-        this.isNewUser = isNewUser;
+    public void setNewUser(boolean newUser) {
+        this.newUser = newUser;
     }
 }

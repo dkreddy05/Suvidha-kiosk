@@ -1,0 +1,2 @@
+-- All columns already present in V1__init_schema.sql
+-- This migration is kept for Flyway version continuity but is now a no-op

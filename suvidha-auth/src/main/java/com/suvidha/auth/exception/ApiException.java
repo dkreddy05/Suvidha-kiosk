@@ -8,6 +8,11 @@ public abstract class ApiException extends RuntimeException {
         this.code = code;
     }
 
+    protected ApiException(String code, String message, Throwable cause) {
+        super(message, cause);
+        this.code = code;
+    }
+
     public String getCode() {
         return code;
     }

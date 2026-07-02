@@ -1,0 +1,2 @@
+-- All tables already created in V1__create_citizens_table.sql
+-- This migration is kept for Flyway version continuity but is now a no-op

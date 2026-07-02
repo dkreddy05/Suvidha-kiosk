@@ -4,7 +4,7 @@ import com.suvidha.auth.Dto.VerifyOtpResponse;
 
 public interface AuthenticationService {
 
-    String sendOtp(String sessionId, String mobile);
+    String sendOtp(String sessionId, String mobile, StringBuilder devOtp);
 
     VerifyOtpResponse verifyOtp(String sessionId, String otp);
 }

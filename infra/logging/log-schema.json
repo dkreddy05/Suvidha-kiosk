@@ -1,0 +1,224 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Suvidha Structured Log Event",
+  "description": "Production-grade JSON log schema for Suvidha microservices",
+  "type": "object",
+  "required": ["timestamp", "level", "service", "message", "trace_id", "correlation_id"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp",
+      "example": "2026-05-21T14:32:01.123Z"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+      "description": "Log severity"
+    },
+    "service": {
+      "type": "string",
+      "description": "Spring Boot application name",
+      "example": "suvidha-billing"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable log message (NO sensitive data)",
+      "example": "Payment processed successfully"
+    },
+    "logger": {
+      "type": "string",
+      "description": "Fully-qualified class name that emitted the log",
+      "example": "com.suvidha.billing.service.PaymentService"
+    },
+    "thread": {
+      "type": "string",
+      "description": "Thread name",
+      "example": "http-nio-8080-exec-3"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "OpenTelemetry-compatible 16-byte hex trace ID (32 chars). Identifies a single end-to-end request across all services.",
+      "pattern": "^[a-f0-9]{32}$",
+      "example": "4bf92f50b7d5c1a2e3f4a5b6c7d8e9f0"
+    },
+    "span_id": {
+      "type": "string",
+      "description": "OpenTelemetry-compatible 8-byte hex span ID (16 chars). Identifies a single operation within a trace.",
+      "pattern": "^[a-f0-9]{16}$",
+      "example": "a1b2c3d4e5f6a7b8"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Business-level correlation ID. Propagated via X-Correlation-ID header. Generated at gateway or first service.",
+      "example": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "session_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "User session ID from JWT or session store. Empty for unauthenticated requests.",
+      "example": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Authenticated user/citizen ID. Masked in logs if PII policy requires.",
+      "example": "USR-0000001234"
+    },
+    "env": {
+      "type": "string",
+      "enum": ["dev", "staging", "prod"],
+      "description": "Deployment environment"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "Pod/container hostname or instance identifier",
+      "example": "suvidha-billing-7d9f8b6c4-xk2m9"
+    },
+    "http": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+          "example": "POST"
+        },
+        "url": {
+          "type": "string",
+          "description": "Request path only (NO query strings with tokens/secrets)",
+          "example": "/api/v1/payments"
+        },
+        "status_code": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599,
+          "example": 201
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Request processing time in milliseconds",
+          "example": 142
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Client User-Agent header (truncated to 256 chars)"
+        },
+        "remote_ip": {
+          "type": "string",
+          "description": "Client IP from X-Forwarded-For (last octet masked in prod)",
+          "example": "192.168.1.***"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "description": "Present only when level >= ERROR",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Application-specific error code",
+          "example": "PAYMENT_GATEWAY_TIMEOUT"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message (sanitized, no stack traces in message field)"
+        },
+        "stack_trace": {
+          "type": "string",
+          "description": "Full stack trace (only in ERROR/FATAL, stripped of PII)"
+        },
+        "cause": {
+          "type": "string",
+          "description": "Root cause exception class name"
+        }
+      }
+    },
+    "business": {
+      "type": "object",
+      "description": "Domain-specific context (varies by service)",
+      "additionalProperties": true,
+      "properties": {
+        "entity_type": {
+          "type": "string",
+          "example": "connection"
+        },
+        "entity_id": {
+          "type": "string",
+          "example": "CONN-2026-004512"
+        },
+        "action": {
+          "type": "string",
+          "example": "apply"
+        },
+        "result": {
+          "type": "string",
+          "enum": ["success", "failure", "pending"],
+          "example": "success"
+        }
+      }
+    },
+    "db": {
+      "type": "object",
+      "description": "Database operation context (only when logging queries)",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": ["select", "insert", "update", "delete"],
+          "example": "update"
+        },
+        "table": {
+          "type": "string",
+          "example": "payments"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "example": 23
+        },
+        "row_count": {
+          "type": "integer",
+          "minimum": 0,
+          "example": 1
+        }
+      }
+    },
+    "external_call": {
+      "type": "object",
+      "description": "Outbound HTTP/RPC call context",
+      "properties": {
+        "target_service": {
+          "type": "string",
+          "example": "suvidha-notification"
+        },
+        "url": {
+          "type": "string",
+          "description": "Target URL (path only, no credentials)"
+        },
+        "status_code": {
+          "type": "integer",
+          "example": 200
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "example": 87
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "example": 0
+        }
+      }
+    },
+    "masked_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of field names that were detected and masked in this log event",
+      "example": ["mobile", "aadhaar", "email"]
+    }
+  },
+  "additionalProperties": false
+}

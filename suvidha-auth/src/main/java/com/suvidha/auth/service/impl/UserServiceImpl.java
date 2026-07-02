@@ -1,9 +1,11 @@
 package com.suvidha.auth.service.impl;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.suvidha.auth.Dto.RegisterRequest;
+import com.suvidha.auth.Dto.Role;
 import com.suvidha.auth.Dto.UserAuthDto;
 import com.suvidha.auth.exception.InvalidRequestException;
 import com.suvidha.auth.exception.SessionNotVerifiedException;
@@ -19,8 +21,12 @@ public class UserServiceImpl implements UserService {
 
     private final CitizenRepo citizenRepo;
     private final StringRedisTemplate template;
+    private final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
 
     private static final String SESSION_PREFIX = "session";
+
+    @Value("${app.registration.allow-test-aadhar:false}")
+    private boolean allowTestAadhar;
 
     public UserServiceImpl(CitizenRepo citizenRepo, StringRedisTemplate template) {
         this.citizenRepo = citizenRepo;
@@ -31,26 +37,22 @@ public class UserServiceImpl implements UserService {
     public UserAuthDto registerUser(RegisterRequest request) {
         if (isBlank(request.getSessionId())
                 || isBlank(request.getMobile())
-                || isBlank(request.getAadhar())
                 || isBlank(request.getName())
-                || isBlank(request.getLanguagePreference())
-                || request.getRole() == null) {
+                || isBlank(request.getLanguagePreference())) {
             throw new InvalidRequestException(
-                    "All fields (sessionId, mobile, aadhar, name, languagePreference, role) are required.");
+                    "All fields (sessionId, mobile, name, languagePreference) are required.");
         }
 
-        // Normalize inputs so uniqueness checks can't be bypassed via whitespace.
         String mobile = request.getMobile().trim();
-        String aadhar = request.getAadhar().trim();
+        String aadhar = request.getAadhar();
+        Role role = request.getRole() != null ? request.getRole() : Role.USER;
 
-        if (citizenRepo.findByMobile(mobile).isPresent()) {
-            throw new UserAlreadyExistsException(
-                    "User with mobile " + mobile + " already exists.");
-        }
+        boolean mobileExists = citizenRepo.findByMobile(mobile).isPresent();
+        boolean aadharExists = (!allowTestAadhar || !aadhar.startsWith("AUTO_"))
+                && citizenRepo.findByAadhar(aadhar).isPresent();
 
-        if (citizenRepo.findByAadhar(aadhar).isPresent()) {
-            throw new UserAlreadyExistsException(
-                    "User with this Aadhar number is already registered.");
+        if (mobileExists || aadharExists) {
+            throw new UserAlreadyExistsException("Registration failed.");
         }
         String sessionKey = SESSION_PREFIX + ":" + request.getSessionId();
         Map<Object, Object> sessionData = template.opsForHash().entries(sessionKey);
@@ -71,6 +73,7 @@ public class UserServiceImpl implements UserService {
                     "Mobile number does not match the verified session.");
         }
 
+        String consumerId = generateConsumerId();
         Citizen newUser = new Citizen(
                 mobile,
                 aadhar,
@@ -78,19 +81,34 @@ public class UserServiceImpl implements UserService {
                 request.getLanguagePreference().trim(),
                 request.getRole(),
                 Instant.now());
+        newUser.setConsumerId(consumerId);
         Citizen savedUser = citizenRepo.save(newUser);
         template.delete(sessionKey);
         return toDto(savedUser);
+    }
+
+    private String generateConsumerId() {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            StringBuilder sb = new StringBuilder("C");
+            for (int i = 0; i < 9; i++) {
+                sb.append(secureRandom.nextInt(10));
+            }
+            String candidate = sb.toString();
+            if (citizenRepo.findByConsumerId(candidate).isEmpty()) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Failed to generate unique consumer ID");
     }
 
     private UserAuthDto toDto(Citizen user) {
         UserAuthDto dto = new UserAuthDto();
         dto.setId(user.getId());
         dto.setMobile(user.getMobile());
-        dto.setAadhar(user.getAadhar());
         dto.setName(user.getName());
         dto.setLanguagePreference(user.getLanguagePreference());
         dto.setRole(user.getRole() != null ? user.getRole().name() : null);
+        dto.setConsumerId(user.getConsumerId());
         return dto;
     }
 

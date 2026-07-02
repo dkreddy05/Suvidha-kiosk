@@ -11,17 +11,23 @@ public class CitizenDTO {
     private String name;
     private String languagePref;
     private Instant createdAt;
+    private String consumerId;
 
     public CitizenDTO() {
     }
 
     public CitizenDTO(String id, String mobile, String aadhaarLast4, String name, String languagePref, Instant createdAt) {
+        this(id, mobile, aadhaarLast4, name, languagePref, createdAt, null);
+    }
+
+    public CitizenDTO(String id, String mobile, String aadhaarLast4, String name, String languagePref, Instant createdAt, String consumerId) {
         this.id = id;
         this.mobile = mobile;
         this.aadhaarLast4 = aadhaarLast4;
         this.name = name;
         this.languagePref = languagePref;
         this.createdAt = createdAt;
+        this.consumerId = consumerId;
     }
 
     public String getId() {
@@ -70,5 +76,13 @@ public class CitizenDTO {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(String consumerId) {
+        this.consumerId = consumerId;
     }
 }

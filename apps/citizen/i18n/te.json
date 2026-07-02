@@ -1,0 +1,256 @@
+{
+  "common": {
+    "appName": "సువిధ",
+    "tagline": "పౌర సేవలకు మీ గేట్‌వే",
+    "loading": "లోడ్ అవుతోంది...",
+    "error": "ఏదో తప్పు జరిగింది",
+    "retry": "మళ్లీ ప్రయత్నించండి",
+    "cancel": "రద్దు చేయి",
+    "save": "సేవ్ చేయి",
+    "submit": "సమర్పించు",
+    "delete": "తొలగించు",
+    "edit": "సవరించు",
+    "back": "వెనుకకు",
+    "next": "తరువాత",
+    "confirm": "ధృవీకరించు",
+    "close": "మూసివేయి",
+    "viewAll": "అన్నీ చూడు",
+    "search": "వెతుకు",
+    "noResults": "ఫలితాలు లేవు",
+    "logout": "లాగౌట్",
+    "copyright": "© {year} సువిధ. అన్ని హక్కులు ప్రత్యేకించబడినవి."
+  },
+  "auth": {
+    "signIn": "సైన్ ఇన్",
+    "enterMobile": "మీ రిజిస్టర్డ్ మొబైల్ నంబర్‌ను నమోదు చేయండి",
+    "mobileLabel": "మొబైల్ సంఖ్య",
+    "mobilePlaceholder": "10 అంకెల మొబైల్ నంబర్",
+    "sendOtp": "ఓటీపీ పంపు",
+    "verifyOtp": "ఓటీపీ ధృవీకరించు",
+    "otpSentTo": "ఓటీపీ {mobile} కు పంపబడింది",
+    "otpDigitLabel": "ఓటీపీ అంకె {index} లో {total}",
+    "resendIn": "{seconds} సెకన్లలో ఓటీపీని మళ్లీ పంపండి",
+    "resend": "ఓటీపీ మళ్లీ పంపు",
+    "termsAgree": "కొనసాగించడం ద్వారా, మీరు మా షరతులకు అంగీకరిస్తున్నారు",
+    "terms": "నిబంధనలు",
+    "privacy": "గోప్యతా విధానం",
+    "welcomeBack": "స్వాగతం!",
+    "completeProfile": "ఖాతా కనుగొనబడింది! మీ ప్రొఫైల్‌ను పూర్తి చేయండి",
+    "invalidOtp": "చెల్లని ఓటీపీ",
+    "otpSent": "ఓటీపీ విజయవంతంగా పంపబడింది",
+    "otpResent": "ఓటీపీ విజయవంతంగా మళ్లీ పంపబడింది",
+    "rateLimited": "చాలా ప్రయత్నాలు చేసారు. దయచేసి తర్వాత ప్రయత్నించండి.",
+    "sessionExpired": "సెషన్ గడువు ముగిసింది. దయచేసి కొత్త ఓటీపీని అభ్యర్థించండి.",
+    "loginRequired": "దయచేసి ఆ పేజీని యాక్సెస్ చేయడానికి సైన్ ఇన్ చేయండి",
+    "register": {
+      "title": "మీ ప్రొఫైల్‌ను పూర్తి చేయండి",
+      "subtitle": "మొదలు పెట్టడానికి కొన్ని వివరాలు",
+      "nameLabel": "పూర్తి పేరు",
+      "namePlaceholder": "మీ పూర్తి పేరు నమోదు చేయండి",
+      "languageLabel": "భాషా ప్రాధాన్యత",
+      "aadhaarLabel": "ఆధార్ సంఖ్య (ఐచ్ఛికం)",
+      "aadhaarHint": "DPDP మార్గదర్శకాల ప్రకారం చివరి 4 అంకెలు మాత్రమే నిల్వ చేయబడతాయి",
+      "submit": "ఖాతా సృష్టించు",
+      "success": "సువిధకు స్వాగతం!"
+    }
+  },
+  "dashboard": {
+    "title": "డ్యాష్‌బోర్డ్",
+    "subtitle": "మీ ఖాతాలు మరియు కార్యాచరణల అవలోకనం",
+    "greeting": {
+      "morning": "శుభోదయం",
+      "afternoon": "శుభ మధ్యాహ్నం",
+      "evening": "శుభ సాయంత్రం"
+    },
+    "whatsHappening": "ఈ రోజు మీ సేవల స్థితి ఇక్కడ ఉంది.",
+    "quickActions": "త్వరిత చర్యలు",
+    "linkedAccounts": "లింక్ చేయబడిన ఖాతాలు",
+    "recentGrievances": "ఇటీవలి ఫిర్యాదులు",
+    "pendingConnections": "పెండింగ్ కనెక్షన్లు",
+    "stats": {
+      "accounts": "ఖాతాలు",
+      "pendingBills": "పెండింగ్ బిల్లులు",
+      "openGrievances": "ఓపెన్ ఫిర్యాదులు",
+      "activeConnections": "యాక్టివ్ కనెక్షన్లు"
+    },
+    "actions": {
+      "payBill": "బిల్లు చెల్లించు",
+      "payBillDesc": "మీ యుటిలిటీ బిల్లులను చూసి చెల్లించండి",
+      "reportGrievance": "ఫిర్యాదు చేయి",
+      "reportGrievanceDesc": "సమస్యను లేదా ఫిర్యాదును సమర్పించండి",
+      "trackConnection": "కనెక్షన్ ట్రాక్ చేయి",
+      "trackConnectionDesc": "మీ కనెక్షన్ అభ్యర్థనలను పర్యవేక్షించండి",
+      "viewProfile": "ప్రొఫైల్ చూడు",
+      "viewProfileDesc": "మీ ఖాతా సెట్టింగులను నిర్వహించండి"
+    }
+  },
+  "billing": {
+    "title": "బిల్లింగ్",
+    "accounts": "నా ఖాతాలు",
+    "noAccounts": "ఖాతాలు లింక్ చేయబడలేదు",
+    "noAccountsDesc": "ఆన్‌లైన్‌లో బిల్లులు చెల్లించడానికి మీ ఖాతాలను లింక్ చేయండి.",
+    "linkAccount": "ఖాతాను లింక్ చేయి",
+    "accountDetail": "ఖాతా వివరాలు",
+    "bills": "బిల్లులు",
+    "noBills": "బిల్లులు కనుగొనబడలేదు",
+    "payNow": "ఇప్పుడే చెల్లించు",
+    "paymentHistory": "చెల్లింపుల చరిత్ర",
+    "serviceTypes": {
+      "ELECTRICITY": "విద్యుత్",
+      "WATER": "నీరు",
+      "GAS": "గ్యాస్"
+    },
+    "billStatus": {
+      "PENDING": "పెండింగ్",
+      "PAYMENT_IN_PROGRESS": "చెల్లింపు జరుగుతోంది",
+      "PAID": "చెల్లించబడింది",
+      "OVERDUE": "గడువు ముగిసింది",
+      "PARTIALLY_PAID": "పాక్షికంగా చెల్లించబడింది",
+      "CANCELLED": "రద్దు చేయబడింది"
+    },
+    "payment": {
+      "title": "బిల్లు చెల్లించు",
+      "review": "సమీక్ష",
+      "method": "చెల్లింపు విధానం",
+      "confirm": "చెల్లింపును ధృవీకరించు",
+      "success": "చెల్లింపు విజయవంతమైంది!",
+      "failed": "చెల్లింపు విఫలమైంది",
+      "receipt": "రసీదు చూడండి",
+      "downloadReceipt": "రసీదు డౌన్‌లోడ్ చేయి",
+      "printReceipt": "రసీదు ప్రింట్ చేయి",
+      "backToDashboard": "తిరిగి డ్యాష్‌బోర్డ్‌కు వెళ్లు",
+      "methods": {
+        "UPI": "UPI",
+        "CARD": "కార్డు",
+        "CASH": "నగదు"
+      }
+    },
+    "receipt": {
+      "title": "చెల్లింపు రసీదు",
+      "transactionId": "లావాదేవీ ఐడీ",
+      "date": "తేదీ",
+      "method": "చెల్లింపు విధానం",
+      "amount": "మొత్తం",
+      "account": "ఖాతా",
+      "provider": "సరఫరాదారు",
+      "status": "స్థితి"
+    }
+  },
+  "grievances": {
+    "title": "ఫిర్యాదులు",
+    "myGrievances": "నా ఫిర్యాదులు",
+    "submitNew": "ఫిర్యాదును సమర్పించు",
+    "noGrievances": "ఫిర్యాదులు లేవు",
+    "noGrievancesDesc": "మీరు ఇంకా ఎటువంటి ఫిర్యాదులు సమర్పించలేదు.",
+    "filters": {
+      "all": "అన్నీ",
+      "open": "ఓపెన్",
+      "inProgress": "పురోగతిలో ఉంది",
+      "resolved": "పరిష్కరించబడింది"
+    },
+    "form": {
+      "category": "వర్గం",
+      "categoryPlaceholder": "వర్గాన్ని ఎంచుకోండి",
+      "description": "వివరణ",
+      "descriptionPlaceholder": "మీ సమస్యను వివరంగా వివరించండి (10-500 అక్షరాలు)",
+      "photoUrl": "ఫోటో URL (ఐచ్ఛికం)",
+      "photoUrlPlaceholder": "https://example.com/photo.jpg",
+      "charCount": "{count}/500 అక్షరాలు",
+      "submit": "ఫిర్యాదును సమర్పించు",
+      "success": "ఫిర్యాదు విజయవంతంగా సమర్పించబడింది"
+    },
+    "tracking": {
+      "title": "ఫిర్యాదు ట్రాక్ చేయి",
+      "referenceNumber": "రిఫరెన్స్ సంఖ్య",
+      "category": "వర్గం",
+      "status": "స్థితి",
+      "submittedAt": "సమర్పించిన తేదీ",
+      "updatedAt": "చివరిగా నవీకరించబడింది",
+      "updates": "స్థితి నవీకరణలు"
+    },
+    "status": {
+      "OPEN": "ఓపెన్",
+      "IN_PROGRESS": "పురోగతిలో ఉంది",
+      "RESOLVED": "పరిష్కరించబడింది",
+      "REJECTED": "తిరస్కరించబడింది",
+      "CLOSED": "మూసివేయబడింది"
+    }
+  },
+  "connections": {
+    "title": "కనెక్షన్లు",
+    "myRequests": "నా అభ్యర్థనలు",
+    "newConnection": "కొత్త కనెక్షన్",
+    "noConnections": "కనెక్షన్ అభ్యర్థనలు లేవు",
+    "noConnectionsDesc": "మీరు కొత్త కనెక్షన్ కోసం ఇంకా దరఖాస్తు చేసుకోలేదు.",
+    "applyNew": "కొత్త కనెక్షన్ కోసం దరఖాస్తు చేసుకోండి",
+    "form": {
+      "serviceType": "సేవ రకం",
+      "address": "చిరునామా",
+      "addressPlaceholder": "మీ పూర్తి చిరునామా నమోదు చేయండి",
+      "documents": "పత్రాలు",
+      "submit": "అభ్యర్థనను సమర్పించు",
+      "success": "కనెక్షన్ అభ్యర్థన సమర్పించబడింది"
+    },
+    "tracking": {
+      "title": "కనెక్షన్ ట్రాక్ చేయి",
+      "referenceNumber": "రిఫరెన్స్ సంఖ్య",
+      "status": "స్థితి",
+      "timeline": "టైమ్‌లైన్"
+    },
+    "status": {
+      "PENDING": "పెండింగ్",
+      "UNDER_REVIEW": "సమీక్షలో ఉంది",
+      "APPROVED": "ఆమోదించబడింది",
+      "REJECTED": "తిరస్కరించబడింది",
+      "COMPLETED": "పూర్తయింది",
+      "CANCELLED": "రద్దు చేయబడింది"
+    }
+  },
+  "profile": {
+    "title": "ప్రొఫైల్",
+    "settings": "సెట్టింగ్స్",
+    "personalInfo": "వ్యక్తిగత సమాచారం",
+    "name": "పూర్తి పేరు",
+    "mobile": "మొబైల్ సంఖ్య",
+    "aadhaar": "ఆధార్ (చివరి 4 అంకెలు)",
+    "language": "భాషా ప్రాధాన్యత",
+    "save": "మార్పులను సేవ్ చేయి",
+    "saved": "ప్రొఫైల్ విజయవంతంగా నవీకరించబడింది",
+    "privacyCenter": "గోప్యతా కేంద్రం",
+    "dangerZone": "డేంజర్ జోన్",
+    "privacy": {
+      "title": "గోప్యతా కేంద్రం",
+      "subtitle": "మీ డేటా మరియు గోప్యతా సెట్టింగులను నిర్వహించండి (DPDP చట్టం)",
+      "myData": "నా డేటా",
+      "consents": "అంగీకారాలు",
+      "exportData": "నా డేటాను ఎగుమతి చేయి",
+      "exportDataDesc": "మీ వ్యక్తిగత డేటాను JSON రూపంలో డౌన్‌లోడ్ చేసుకోండి",
+      "exportButton": "డేటా ఎగుమతి",
+      "auditLog": "ఆడిట్ లాగ్",
+      "deleteAccount": "ఖాతాను తొలగించు",
+      "deleteWarning": "ఈ చర్యను వెనక్కి తీసుకోలేరు. మీ డేటా శాశ్వతంగా తొలగించబడుతుంది.",
+      "deleteConfirm": "నేను అర్థం చేసుకున్నాను, నా ఖాతాను తొలగించు"
+    }
+  },
+  "notifications": {
+    "title": "నోటిఫికేషన్లు",
+    "noNotifications": "నోటిఫికేషన్లు లేవు",
+    "noNotificationsDesc": "మీ నోటిఫికేషన్ చరిత్ర ఇక్కడ కనిపిస్తుంది."
+  },
+  "nav": {
+    "dashboard": "డ్యాష్‌బోర్డ్",
+    "billing": "బిల్లింగ్",
+    "accounts": "ఖాతాలు",
+    "paymentHistory": "చెల్లింపుల చరిత్ర",
+    "connections": "కనెక్షన్లు",
+    "myRequests": "నా అభ్యర్థనలు",
+    "newConnection": "కొత్త కనెక్షన్",
+    "grievances": "ఫిర్యాదులు",
+    "myGrievances": "నా ఫిర్యాదులు",
+    "submitNew": "కొత్త ఫిర్యాదు",
+    "notifications": "నోటిఫికేషన్లు",
+    "profile": "ప్రొఫైల్",
+    "settings": "సెట్టింగ్స్",
+    "privacyCenter": "గోప్యతా కేంద్రం"
+  }
+}

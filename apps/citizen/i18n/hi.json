@@ -1,0 +1,256 @@
+{
+  "common": {
+    "appName": "सुविधा",
+    "tagline": "नागरिक सेवाओं के लिए आपका प्रवेश द्वार",
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हो गया",
+    "retry": "पुनः प्रयास करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "submit": "जमा करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "back": "पीछे",
+    "next": "आगे",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें",
+    "viewAll": "सभी देखें",
+    "search": "खोजें",
+    "noResults": "कोई परिणाम नहीं मिला",
+    "logout": "लॉगआउट",
+    "copyright": "© {year} सुविधा। सर्वाधिकार सुरक्षित।"
+  },
+  "auth": {
+    "signIn": "साइन इन करें",
+    "enterMobile": "अपना पंजीकृत मोबाइल नंबर दर्ज करें",
+    "mobileLabel": "मोबाइल नंबर",
+    "mobilePlaceholder": "10-अंकीय नंबर दर्ज करें",
+    "sendOtp": "ओटीपी भेजें",
+    "verifyOtp": "ओटीपी सत्यापित करें",
+    "otpSentTo": "ओटीपी {mobile} पर भेजा गया है",
+    "otpDigitLabel": "ओटीपी अंक {index} का {total}",
+    "resendIn": "{seconds} सेकंड में ओटीपी पुनः भेजें",
+    "resend": "ओटीपी पुनः भेजें",
+    "termsAgree": "आगे बढ़कर, आप हमारी शर्तों से सहमत होते हैं",
+    "terms": "नियम और शर्तें",
+    "privacy": "गोपनीयता नीति",
+    "welcomeBack": "आपका स्वागत है!",
+    "completeProfile": "खाता मिल गया! अपना प्रोफ़ाइल पूरा करें",
+    "invalidOtp": "अमान्य ओटीपी",
+    "otpSent": "ओटीपी सफलतापूर्वक भेजा गया",
+    "otpResent": "ओटीपी सफलतापूर्वक पुनः भेजा गया",
+    "rateLimited": "बहुत सारे प्रयास। कृपया बाद में पुनः प्रयास करें।",
+    "sessionExpired": "सत्र समाप्त हो गया। कृपया नया ओटीपी अनुरोध करें।",
+    "loginRequired": "कृपया उस पृष्ठ तक पहुँचने के लिए साइन इन करें",
+    "register": {
+      "title": "अपनी प्रोफ़ाइल पूरी करें",
+      "subtitle": "शुरू करने के लिए बस कुछ विवरण",
+      "nameLabel": "पूरा नाम",
+      "namePlaceholder": "अपना पूरा नाम दर्ज करें",
+      "languageLabel": "भाषा वरीयता",
+      "aadhaarLabel": "आधार संख्या (वैकल्पिक)",
+      "aadhaarHint": "डीपीडीपी दिशानिर्देशों के अनुसार केवल अंतिम 4 अंक संग्रहीत किए जाएंगे",
+      "submit": "खाता बनाएं",
+      "success": "सुविधा में आपका स्वागत है!"
+    }
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "subtitle": "आपके खातों और गतिविधियों का अवलोकन",
+    "greeting": {
+      "morning": "शुभ प्रभात",
+      "afternoon": "शुभ दोपहर",
+      "evening": "शुभ संध्या"
+    },
+    "whatsHappening": "आज आपकी सेवाओं की स्थिति यहाँ दी गई है।",
+    "quickActions": "त्वरित कार्रवाई",
+    "linkedAccounts": "लिंक्ड खाते",
+    "recentGrievances": "हाल की शिकायतें",
+    "pendingConnections": "लंबित कनेक्शन",
+    "stats": {
+      "accounts": "खाते",
+      "pendingBills": "लंबित बिल",
+      "openGrievances": "खुली शिकायतें",
+      "activeConnections": "सक्रिय कनेक्शन"
+    },
+    "actions": {
+      "payBill": "बिल का भुगतान करें",
+      "payBillDesc": "अपने उपयोगिता बिल देखें और भुगतान करें",
+      "reportGrievance": "शिकायत दर्ज करें",
+      "reportGrievanceDesc": "शिकायत या समस्या प्रस्तुत करें",
+      "trackConnection": "कनेक्शन ट्रैक करें",
+      "trackConnectionDesc": "अपने कनेक्शन अनुरोधों की निगरानी करें",
+      "viewProfile": "प्रोफ़ाइल देखें",
+      "viewProfileDesc": "अपने खाता सेटिंग्स प्रबंधित करें"
+    }
+  },
+  "billing": {
+    "title": "बिलिंग",
+    "accounts": "मेरे खाते",
+    "noAccounts": "कोई खाता लिंक नहीं है",
+    "noAccountsDesc": "ऑनलाइन बिलों का भुगतान शुरू करने के लिए अपने उपयोगिता खाते लिंक करें।",
+    "linkAccount": "खाता लिंक करें",
+    "accountDetail": "खाता विवरण",
+    "bills": "बिल",
+    "noBills": "कोई बिल नहीं मिला",
+    "payNow": "अभी भुगतान करें",
+    "paymentHistory": "भुगतान इतिहास",
+    "serviceTypes": {
+      "ELECTRICITY": "बिजली",
+      "WATER": "पानी",
+      "GAS": "गैस"
+    },
+    "billStatus": {
+      "PENDING": "लंबित",
+      "PAYMENT_IN_PROGRESS": "भुगतान प्रक्रिया में",
+      "PAID": "भुगतान किया गया",
+      "OVERDUE": "देय तिथि समाप्त",
+      "PARTIALLY_PAID": "आंशिक रूप से भुगतान किया गया",
+      "CANCELLED": "रद्द"
+    },
+    "payment": {
+      "title": "बिल का भुगतान करें",
+      "review": "समीक्षा",
+      "method": "भुगतान विधि",
+      "confirm": "भुगतान की पुष्टि करें",
+      "success": "भुगतान सफल रहा!",
+      "failed": "भुगतान विफल रहा",
+      "receipt": "रसीद देखें",
+      "downloadReceipt": "रसीद डाउनलोड करें",
+      "printReceipt": "रसीद प्रिंट करें",
+      "backToDashboard": "डैशबोर्ड पर वापस जाएं",
+      "methods": {
+        "UPI": "यूपीआई",
+        "CARD": "कार्ड",
+        "CASH": "नकद"
+      }
+    },
+    "receipt": {
+      "title": "भुगतान रसीद",
+      "transactionId": "लेनदेन आईडी",
+      "date": "दिनांक",
+      "method": "भुगतान विधि",
+      "amount": "राशि",
+      "account": "खाता",
+      "provider": "प्रदाता",
+      "status": "स्थिति"
+    }
+  },
+  "grievances": {
+    "title": "शिकायतें",
+    "myGrievances": "मेरी शिकायतें",
+    "submitNew": "शिकायत प्रस्तुत करें",
+    "noGrievances": "कोई शिकायत नहीं मिली",
+    "noGrievancesDesc": "आपने अभी तक कोई शिकायत प्रस्तुत नहीं की है।",
+    "filters": {
+      "all": "सभी",
+      "open": "खुली",
+      "inProgress": "प्रगति पर",
+      "resolved": "हल की गई"
+    },
+    "form": {
+      "category": "श्रेणी",
+      "categoryPlaceholder": "श्रेणी चुनें",
+      "description": "विवरण",
+      "descriptionPlaceholder": "अपनी समस्या का विस्तार से वर्णन करें (10-500 वर्ण)",
+      "photoUrl": "फ़ोटो यूआरएल (वैकल्पिक)",
+      "photoUrlPlaceholder": "https://example.com/photo.jpg",
+      "charCount": "{count}/500 वर्ण",
+      "submit": "शिकायत सबमिट करें",
+      "success": "शिकायत सफलतापूर्वक सबमिट की गई"
+    },
+    "tracking": {
+      "title": "शिकायत ट्रैक करें",
+      "referenceNumber": "संदर्भ संख्या",
+      "category": "श्रेणी",
+      "status": "स्थिति",
+      "submittedAt": "प्रस्तुत किया गया",
+      "updatedAt": "अंतिम बार अपडेट किया गया",
+      "updates": "स्थिति अपडेट"
+    },
+    "status": {
+      "OPEN": "खुली",
+      "IN_PROGRESS": "प्रगति पर",
+      "RESOLVED": "हल की गई",
+      "REJECTED": "अस्वीकृत",
+      "CLOSED": "बंद"
+    }
+  },
+  "connections": {
+    "title": "कनेक्शन",
+    "myRequests": "मेरे अनुरोध",
+    "newConnection": "नया कनेक्शन",
+    "noConnections": "कोई कनेक्शन अनुरोध नहीं",
+    "noConnectionsDesc": "आपने नए कनेक्शन के लिए आवेदन नहीं किया है।",
+    "applyNew": "नए कनेक्शन के लिए आवेदन करें",
+    "form": {
+      "serviceType": "सेवा प्रकार",
+      "address": "पता",
+      "addressPlaceholder": "अपना पूरा पता दर्ज करें",
+      "documents": "दस्तावेज़",
+      "submit": "अनुरोध सबमिट करें",
+      "success": "कनेक्शन अनुरोध सबमिट किया गया"
+    },
+    "tracking": {
+      "title": "कनेक्शन ट्रैक करें",
+      "referenceNumber": "संदर्भ संख्या",
+      "status": "स्थिति",
+      "timeline": "समयरेखा"
+    },
+    "status": {
+      "PENDING": "लंबित",
+      "UNDER_REVIEW": "समीक्षा के अधीन",
+      "APPROVED": "स्वीकृत",
+      "REJECTED": "अस्वीकृत",
+      "COMPLETED": "पूर्ण",
+      "CANCELLED": "रद्द"
+    }
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "settings": "सेटिंग्स",
+    "personalInfo": "व्यक्तिगत जानकारी",
+    "name": "पूरा नाम",
+    "mobile": "मोबाइल नंबर",
+    "aadhaar": "आधार (अंतिम 4 अंक)",
+    "language": "भाषा वरीयता",
+    "save": "परिवर्तन सहेजें",
+    "saved": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई",
+    "privacyCenter": "गोपनीयता केंद्र",
+    "dangerZone": "खतरे का क्षेत्र",
+    "privacy": {
+      "title": "गोपनीयता केंद्र",
+      "subtitle": "अपने डेटा और गोपनीयता सेटिंग्स प्रबंधित करें (डीपीडीपी अधिनियम)",
+      "myData": "मेरा डेटा",
+      "consents": "सहमति",
+      "exportData": "मेरा डेटा निर्यात करें",
+      "exportDataDesc": "अपने सभी व्यक्तिगत डेटा को JSON के रूप में डाउनलोड करें",
+      "exportButton": "डेटा निर्यात करें",
+      "auditLog": "ऑडिट लॉग",
+      "deleteAccount": "खाता हटाएं",
+      "deleteWarning": "यह क्रिया पूर्ववत नहीं की जा सकती। आपका सारा डेटा स्थायी रूप से हटा दिया जाएगा।",
+      "deleteConfirm": "मैं समझता हूँ, मेरा खाता हटा दें"
+    }
+  },
+  "notifications": {
+    "title": "सूचनाएं",
+    "noNotifications": "कोई सूचना नहीं",
+    "noNotificationsDesc": "आप अपना सूचना इतिहास यहाँ देखेंगे।"
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "billing": "बिलिंग",
+    "accounts": "खाते",
+    "paymentHistory": "भुगतान इतिहास",
+    "connections": "कनेक्शन",
+    "myRequests": "मेरे अनुरोध",
+    "newConnection": "नया कनेक्शन",
+    "grievances": "शिकायतें",
+    "myGrievances": "मेरी शिकायतें",
+    "submitNew": "नई शिकायत",
+    "notifications": "सूचनाएं",
+    "profile": "प्रोफ़ाइल",
+    "settings": "सेटिंग्स",
+    "privacyCenter": "गोपनीयता केंद्र"
+  }
+}

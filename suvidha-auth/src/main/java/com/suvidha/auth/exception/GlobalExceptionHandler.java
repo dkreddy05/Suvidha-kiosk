@@ -2,15 +2,22 @@ package com.suvidha.auth.exception;
 
 import com.suvidha.auth.Dto.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String REQUEST_ID_HEADER = "X-Request-Id";
 
     private String requestId(HttpServletRequest request) {
@@ -119,30 +126,28 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
             HttpServletRequest request) {
         String rid = requestId(request);
-
-        String raw = null;
-        if (ex.getMostSpecificCause() != null) {
-            raw = ex.getMostSpecificCause().getMessage();
-        }
-        if (raw == null) {
-            raw = ex.getMessage();
-        }
-
-        String msg = "User already exists.";
-        String lower = raw != null ? raw.toLowerCase() : "";
-        if (lower.contains("aadhar")) {
-            msg = "User with this Aadhar number is already registered.";
-        } else if (lower.contains("mobile")) {
-            msg = "User with this mobile number is already registered.";
-        }
-
+        log.warn("Data integrity violation during registration: {}", ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage() : ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .header(REQUEST_ID_HEADER, rid)
-                .body(ApiErrorResponse.of("USER_ALREADY_EXISTS", msg, rid));
+                .body(ApiErrorResponse.of("USER_ALREADY_EXISTS", "Registration failed.", rid));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+        String rid = requestId(request);
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(fe -> fieldErrors.put(fe.getField(), fe.getDefaultMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .header(REQUEST_ID_HEADER, rid)
+                .body(ApiErrorResponse.of("VALIDATION_ERROR", "Validation failed", fieldErrors, rid));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error on {} {}", request.getMethod(), request.getRequestURI(), ex);
         String rid = requestId(request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .header(REQUEST_ID_HEADER, rid)

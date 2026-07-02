@@ -1,0 +1,56 @@
+# =============================================================
+#  Prometheus Configuration for SUVIDHA Services
+# =============================================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'suvidha-auth'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-auth:8081']
+        labels:
+          service: 'auth'
+
+  - job_name: 'suvidha-billing'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-billing:8082']
+        labels:
+          service: 'billing'
+
+  - job_name: 'suvidha-grievance'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-grievance:8083']
+        labels:
+          service: 'grievance'
+
+  - job_name: 'suvidha-connections'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-connections:8084']
+        labels:
+          service: 'connections'
+
+  - job_name: 'suvidha-notification'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-notification:8085']
+        labels:
+          service: 'notification'
+
+  - job_name: 'suvidha-admin'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-admin:8086']
+        labels:
+          service: 'admin'
+
+  - job_name: 'suvidha-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['suvidha-gateway:8080']
+        labels:
+          service: 'gateway'

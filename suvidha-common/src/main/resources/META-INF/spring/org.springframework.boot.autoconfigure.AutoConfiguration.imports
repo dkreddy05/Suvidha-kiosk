@@ -1,0 +1,2 @@
+com.suvidha.common.config.SuvidhaLoggingAutoConfiguration
+com.suvidha.common.config.SuvidhaReactiveLoggingAutoConfiguration

@@ -1,6 +1,7 @@
 package com.suvidha.auth.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.suvidha.auth.service.AuthenticationService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -31,9 +32,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final SecureRandom secureRandom;
     private static final String OTP_PREFIX = "otp";
     private static final String SESSION_PREFIX = "session";
-    private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_ATTEMPTS = 5;
     private final JwtToken jwtToken;
-    private static final Duration RATE_LIMIT_TTL = Duration.ofMinutes(1);
+    private static final Duration RATE_LIMIT_TTL = Duration.ofMinutes(15);
     private static final Duration OTP_TTL = Duration.ofMinutes(5);
     private static final Duration VERIFIED_SESSION_TTL = Duration.ofMinutes(10);
 
@@ -47,7 +48,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public String sendOtp(String sessionId, String mobile) {
+    public String sendOtp(String sessionId, String mobile, StringBuilder devOtp) {
         if (isBlank(mobile)) {
             throw new InvalidRequestException("mobile is required.");
         }
@@ -56,17 +57,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             sessionId = UUID.randomUUID().toString();
         }
 
-        String rateLimitKey = "otp:rate:" + mobile;
+        String rateLimitKey = "otp:ratelimit:" + mobile;
         try {
-            Boolean allow = template.opsForValue().setIfAbsent(rateLimitKey, "1", RATE_LIMIT_TTL);
-            if (Boolean.FALSE.equals(allow)) {
-                throw new OtpRateLimitExceededException(
-                        "OTP already sent recently. Please wait before retrying.");
+            Long count = template.opsForValue().increment(rateLimitKey);
+            if (count != null) {
+                if (count == 1) {
+                    template.expire(rateLimitKey, RATE_LIMIT_TTL);
+                }
+                if (count > 3) {
+                    throw new OtpRateLimitExceededException(
+                            "OTP rate limit exceeded (max 3 requests per 15 mins). Please wait.");
+                }
             }
 
-            String otp = String.format("%06d", secureRandom.nextInt(1000000));
+            String otp = String.format("%06d", secureRandom.nextInt(900000) + 100000);
             String hashedOtp = encoder.encode(otp);
-            System.out.println("OTP: " + otp);
 
             String key = OTP_PREFIX + ":" + sessionId;
 
@@ -78,15 +83,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             template.opsForHash().putAll(key, hp);
             template.expire(key, OTP_TTL);
 
+            if (devOtp != null) {
+                devOtp.append(otp);
+            }
+
             return sessionId;
         } catch (OtpRateLimitExceededException | InvalidRequestException e) {
             throw e;
         } catch (Exception e) {
-            throw new OtpSendFailedException("Failed to send OTP. Please try again.");
+            throw new OtpSendFailedException("Failed to send OTP. Please try again.", e);
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VerifyOtpResponse verifyOtp(String sessionId, String otp) {
         if (isBlank(sessionId) || isBlank(otp)) {
             throw new InvalidRequestException("sessionId and otp are required.");
@@ -138,16 +148,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             template.expire(sessionKey, VERIFIED_SESSION_TTL);
             template.delete(otpKey);
             Citizen citizen = citizenRepo.findByMobile(storedMobile).orElse(null);
+            String citizenId = citizen != null ? citizen.getId() : storedMobile;
+            String role = citizen != null && citizen.getRole() != null
+                ? citizen.getRole().name()
+                : "USER";
+            String token = jwtToken.generateToken(
+                citizenId,
+                storedMobile,
+                citizen != null ? citizen.getName() : "",
+                role
+            );
             if (citizen == null) {
-                return new VerifyOtpResponse(storedMobile, true, false, null);
+                return new VerifyOtpResponse(storedMobile, true, false, token);
             }
-            String token = jwtToken.generateToken(citizen.getId(), storedMobile, citizen.getName());
             return new VerifyOtpResponse(storedMobile, true, true, token);
         } catch (InvalidRequestException | OtpSessionInvalidException | OtpMobileMismatchException
                 | OtpMaxAttemptsExceededException | OtpIncorrectException e) {
             throw e;
         } catch (Exception e) {
-            throw new OtpVerifyFailedException("Failed to verify OTP. Please try again.");
+            throw new OtpVerifyFailedException("Failed to verify OTP. Please try again.", e);
         }
     }
 

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUVIDHA 2026 — Application Metadata</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { color: #1a5c96; margin-bottom: 8px; }
+  h2 { color: #2c5282; margin: 24px 0 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+  h3 { color: #4a5568; margin: 16px 0 8px; }
+  .subtitle { color: #718096; margin-bottom: 24px; }
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .meta-card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .meta-card h4 { color: #1a5c96; margin-bottom: 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .meta-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+  .meta-item:last-child { border-bottom: none; }
+  .meta-label { color: #718096; font-size: 13px; }
+  .meta-value { font-weight: 600; font-size: 13px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag.green { background: #c6f6d5; color: #22543d; }
+  .tag.amber { background: #feebc8; color: #744210; }
+  .tag.red { background: #fed7d7; color: #742a2a; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+  th { background: #f7fafc; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #4a5568; }
+  tr:last-child td { border-bottom: none; }
+  .status-ok { color: #22543d; }
+  .status-warn { color: #744210; }
+  .status-error { color: #742a2a; }
+  code { background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+  .endpoints-list { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .endpoint { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .endpoint:last-child { border-bottom: none; }
+  .method { font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px; min-width: 60px; text-align: center; }
+  .method.get { background: #c6f6d5; color: #22543d; }
+  .method.post { background: #bee3f8; color: #2a4365; }
+  .method.patch { background: #feebc8; color: #744210; }
+  .path { font-family: monospace; font-size: 13px; }
+  footer { margin-top: 32px; text-align: center; color: #718096; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>SUVIDHA 2026</h1>
+<p class="subtitle">Civic Utility Kiosk Platform — Application Metadata</p>
+
+<h2>Project Overview</h2>
+<div class="meta-grid">
+<div class="meta-card">
+<h4>General Info</h4>
+<div class="meta-item"><span class="meta-label">Project Name</span><span class="meta-value">SUVIDHA 2026</span></div>
+<div class="meta-item"><span class="meta-label">Build Tool</span><span class="meta-value">Maven Multi-Module</span></div>
+<div class="meta-item"><span class="meta-label">Parent POM Version</span><span class="meta-value">1.0.0-SNAPSHOT</span></div>
+<div class="meta-item"><span class="meta-label">Spring Boot</span><span class="meta-value">3.2.5</span></div>
+<div class="meta-item"><span class="meta-label">Java Version</span><span class="meta-value">17 (Required: 21)</span></div>
+</div>
+<div class="meta-card">
+<h4>Infrastructure</h4>
+<div class="meta-item"><span class="meta-label">Database</span><span class="meta-value">PostgreSQL 15</span></div>
+<div class="meta-item"><span class="meta-label">Cache</span><span class="meta-value">Redis 7</span></div>
+<div class="meta-item"><span class="meta-label">API Gateway</span><span class="meta-value">Spring Cloud Gateway</span></div>
+<div class="meta-item"><span class="meta-label">JWT Library</span><span class="meta-value">jjwt 0.12.5</span></div>
+<div class="meta-item"><span class="meta-label">Orchestration</span><span class="meta-value">Docker Compose</span></div>
+</div>
+</div>
+
+<h2>Microservices</h2>
+<table>
+<thead>
+<tr><th>Service</th><th>Artifact</th><th>Port</th><th>Framework</th><th>Status</th></tr>
+</thead>
+<tbody>
+<tr><td>API Gateway</td><td>suvidha-gateway</td><td>8080</td><td>Spring Cloud Gateway</td><td><span class="tag green">Active</span></td></tr>
+<tr><td>Auth Service</td><td>suvidha-auth</td><td>8081</td><td>Spring Boot Web</td><td><span class="tag green">Active</span></td></tr>
+<tr><td>Billing Service</td><td>suvidha-billing</td><td>8082</td><td>Spring Boot Web</td><td><span class="tag green">Active</span></td></tr>
+<tr><td>Grievance Service</td><td>suvidha-grievance</td><td>8083</td><td>Spring Boot Web</td><td><span class="tag green">Active</span></td></tr>
+<tr><td>Connections Service</td><td>suvidha-connections</td><td>8084</td><td>Spring Boot Web</td><td><span class="tag green">Active</span></td></tr>
+<tr><td>Notification Service</td><td>suvidha-notification</td><td>8085</td><td>Spring Boot Web</td><td><span class="tag amber">Partial</span></td></tr>
+<tr><td>Admin Service</td><td>suvidha-admin</td><td>8086</td><td>Spring Boot Web</td><td><span class="tag green">Active</span></td></tr>
+</tbody>
+</table>
+
+<h2>Frontend</h2>
+<div class="meta-grid">
+<div class="meta-card">
+<h4>Kiosk Application</h4>
+<div class="meta-item"><span class="meta-label">Frontend</span><span class="meta-value">React 18</span></div>
+<div class="meta-item"><span class="meta-label">Build Tool</span><span class="meta-value">Vite 5</span></div>
+<div class="meta-item"><span class="meta-label">Styling</span><span class="meta-value">Tailwind CSS</span></div>
+<div class="meta-item"><span class="meta-label">State Management</span><span class="meta-value">Zustand</span></div>
+<div class="meta-item"><span class="meta-label">Port</span><span class="meta-value">3000</span></div>
+</div>
+<div class="meta-card">
+<h4>Internationalization</h4>
+<div class="meta-item"><span class="meta-label">Languages</span><span class="meta-value">4</span></div>
+<div class="meta-item"><span class="meta-label">Supported</span><span class="meta-value">en, hi, te, ta</span></div>
+<div class="meta-item"><span class="meta-label">i18n Library</span><span class="meta-value">i18next</span></div>
+</div>
+</div>
+
+<h2>API Endpoints</h2>
+
+<h3>Auth Service (8081)</h3>
+<div class="endpoints-list">
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/auth/health</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/auth/register</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/auth/send-otp</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/auth/verify-otp</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/auth/refresh</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/auth/logout</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/auth/profile</span></div>
+</div>
+
+<h3>Billing Service (8082)</h3>
+<div class="endpoints-list">
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/billing/health</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/billing/accounts</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/billing/accounts</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/billing/accounts/{id}/bills</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/billing/accounts/{id}/payments</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/billing/accounts/{id}/payments/{txn}/receipt</span></div>
+</div>
+
+<h3>Grievance Service (8083)</h3>
+<div class="endpoints-list">
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/grievances/health</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/grievances</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/grievances/{referenceNumber}</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/grievances</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/grievances/categories</span></div>
+</div>
+
+<h3>Connections Service (8084)</h3>
+<div class="endpoints-list">
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/connections/health</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/v1/connections/requests</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/connections/requests</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/connections/requests/{requestId}</span></div>
+<div class="endpoint"><span class="method patch">PATCH</span><span class="path">/api/v1/connections/requests/{requestId}/status</span></div>
+</div>
+
+<h3>Admin Service (8086)</h3>
+<div class="endpoints-list">
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/admin/health</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/admin/metrics/dashboard</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/admin/metrics/users</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/admin/metrics/grievances</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/v1/admin/metrics/payments</span></div>
+</div>
+
+<h2>Database</h2>
+<div class="meta-grid">
+<div class="meta-card">
+<h4>PostgreSQL Configuration</h4>
+<div class="meta-item"><span class="meta-label">Database Name</span><span class="meta-value">suvidha_auth_db</span></div>
+<div class="meta-item"><span class="meta-label">User</span><span class="meta-value">suvidha</span></div>
+<div class="meta-item"><span class="meta-label">Port</span><span class="meta-value">5432</span></div>
+<div class="meta-item"><span class="meta-label">Driver</span><span class="meta-value">PostgreSQL 42.7.3</span></div>
+</div>
+<div class="meta-card">
+<h4>Redis Configuration</h4>
+<div class="meta-item"><span class="meta-label">Host</span><span class="meta-value">redis</span></div>
+<div class="meta-item"><span class="meta-label">Port</span><span class="meta-value">6379</span></div>
+<div class="meta-item"><span class="meta-label">Use Cases</span><span class="meta-value">OTP, Sessions, Rate Limit</span></div>
+</div>
+</div>
+
+<h2>Docker Compose Services</h2>
+<table>
+<thead>
+<tr><th>Container</th><th>Image</th><th>Port</th><th>Health Check</th></tr>
+</thead>
+<tbody>
+<tr><td>suvidha-postgres</td><td>postgres:15-alpine</td><td>5432</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-redis</td><td>redis:7-alpine</td><td>6379</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-auth</td><td>custom</td><td>8081</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-billing</td><td>custom</td><td>8082</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-grievance</td><td>custom</td><td>8083</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-connections</td><td>custom</td><td>8084</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-admin</td><td>custom</td><td>8086</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-gateway</td><td>custom</td><td>8080</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-kiosk</td><td>custom</td><td>3000</td><td class="status-ok">✓</td></tr>
+<tr><td>suvidha-pgadmin</td><td>dpage/pgadmin4</td><td>5050</td><td class="status-ok">✓</td></tr>
+</tbody>
+</table>
+
+<h2>Compliance Status</h2>
+<table>
+<thead>
+<tr><th>Requirement</th><th>Expected</th><th>Current</th><th>Status</th></tr>
+</thead>
+<tbody>
+<tr><td>Java Version</td><td>Java 21</td><td>Java 17</td><td><span class="tag red">Needs Upgrade</span></td></tr>
+<tr><td>Gateway Routes</td><td>Full routing config</td><td>Partial</td><td><span class="tag amber">Incomplete</span></td></tr>
+<tr><td>Notification Service</td><td>Full implementation</td><td>Skeleton only</td><td><span class="tag amber">Incomplete</span></td></tr>
+<tr><td>Flyway Migrations</td><td>Schema migrations</td><td>Missing</td><td><span class="tag red">Missing</span></td></tr>
+<tr><td>Security Hardening</td><td>RS256, CSRF, DPDP</td><td>HS256 only</td><td><span class="tag amber">Not Implemented</span></td></tr>
+<tr><td>Frontend</td><td>Complete kiosk UI</td><td>Built with i18n</td><td><span class="tag green">Complete</span></td></tr>
+<tr><td>i18n (4 languages)</td><td>en, hi, te, ta</td><td>en, hi, te, ta</td><span class="tag green">✓</span></td></tr>
+</tbody>
+</table>
+
+<h2>Environment Variables</h2>
+<table>
+<thead>
+<tr><th>Variable</th><th>Description</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td>POSTGRES_PASSWORD</td><td>PostgreSQL password</td><td><code>suvidha_pass</code></td></tr>
+<tr><td>REDIS_HOST</td><td>Redis container hostname</td><td><code>redis</code></td></tr>
+<tr><td>JWT_SECRET</td><td>JWT signing key (64+ chars)</td><td><code>***</code></td></tr>
+<tr><td>SPRING_DATASOURCE_URL</td><td>PostgreSQL JDBC URL</td><td><code>jdbc:postgresql://postgres:5432/suvidha_auth_db</code></td></tr>
+</tbody>
+</table>
+
+<h2>Build & Run Commands</h2>
+<div class="meta-grid">
+<div class="meta-card">
+<h4>Build All Services</h4>
+<div class="meta-item"><span class="meta-label">Maven</span><span class="meta-value"><code>mvn clean install -DskipTests</code></span></div>
+</div>
+<div class="meta-card">
+<h4>Run Application</h4>
+<div class="meta-item"><span class="meta-label">Docker</span><span class="meta-value"><code>docker compose up --build</code></span></div>
+</div>
+<div class="meta-card">
+<h4>Logs</h4>
+<div class="meta-item"><span class="meta-label">Billing logs</span><span class="meta-value"><code>docker compose logs -f suvidha-billing</code></span></div>
+</div>
+</div>
+
+<footer>
+<p>SUVIDHA 2026 — Generated: April 2026</p>
+<p>Java 21 · Spring Boot 3.2.5 · React 18 · PostgreSQL 15 · Redis 7</p>
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,256 @@
+{
+  "common": {
+    "appName": "Suvidha",
+    "tagline": "Your Gateway to Citizen Services",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "close": "Close",
+    "viewAll": "View All",
+    "search": "Search",
+    "noResults": "No results found",
+    "logout": "Logout",
+    "copyright": "© {year} Suvidha. All rights reserved."
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "enterMobile": "Enter your registered mobile number",
+    "mobileLabel": "Mobile Number",
+    "mobilePlaceholder": "Enter 10-digit number",
+    "sendOtp": "Send OTP",
+    "verifyOtp": "Verify OTP",
+    "otpSentTo": "OTP sent to {mobile}",
+    "otpDigitLabel": "OTP digit {index} of {total}",
+    "resendIn": "Resend OTP in {seconds}s",
+    "resend": "Resend OTP",
+    "termsAgree": "By continuing, you agree to our",
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "welcomeBack": "Welcome back!",
+    "completeProfile": "Account found! Complete your profile",
+    "invalidOtp": "Invalid OTP",
+    "otpSent": "OTP sent successfully",
+    "otpResent": "OTP resent successfully",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "sessionExpired": "Session expired. Please request a new OTP.",
+    "loginRequired": "Please sign in to access that page",
+    "register": {
+      "title": "Complete Your Profile",
+      "subtitle": "Just a few details to get you started",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "languageLabel": "Language Preference",
+      "aadhaarLabel": "Aadhaar Number (Optional)",
+      "aadhaarHint": "Only last 4 digits will be stored",
+      "submit": "Create Account",
+      "success": "Welcome to Suvidha!"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your accounts and activity",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "whatsHappening": "Here's what's happening with your services today.",
+    "quickActions": "Quick Actions",
+    "linkedAccounts": "Linked Accounts",
+    "recentGrievances": "Recent Grievances",
+    "pendingConnections": "Pending Connections",
+    "stats": {
+      "accounts": "Accounts",
+      "pendingBills": "Pending Bills",
+      "openGrievances": "Open Grievances",
+      "activeConnections": "Active Connections"
+    },
+    "actions": {
+      "payBill": "Pay a Bill",
+      "payBillDesc": "View and pay your utility bills",
+      "reportGrievance": "Report Grievance",
+      "reportGrievanceDesc": "Submit a complaint or issue",
+      "trackConnection": "Track Connection",
+      "trackConnectionDesc": "Monitor your connection requests",
+      "viewProfile": "View Profile",
+      "viewProfileDesc": "Manage your account settings"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "accounts": "My Accounts",
+    "noAccounts": "No accounts linked",
+    "noAccountsDesc": "Link your utility accounts to start paying bills online.",
+    "linkAccount": "Link Account",
+    "accountDetail": "Account Detail",
+    "bills": "Bills",
+    "noBills": "No bills found",
+    "payNow": "Pay Now",
+    "paymentHistory": "Payment History",
+    "serviceTypes": {
+      "ELECTRICITY": "Electricity",
+      "WATER": "Water",
+      "GAS": "Gas"
+    },
+    "billStatus": {
+      "PENDING": "Pending",
+      "PAYMENT_IN_PROGRESS": "Payment In Progress",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "PARTIALLY_PAID": "Partially Paid",
+      "CANCELLED": "Cancelled"
+    },
+    "payment": {
+      "title": "Pay Bill",
+      "review": "Review",
+      "method": "Payment Method",
+      "confirm": "Confirm Payment",
+      "success": "Payment Successful!",
+      "failed": "Payment Failed",
+      "receipt": "View Receipt",
+      "downloadReceipt": "Download Receipt",
+      "printReceipt": "Print Receipt",
+      "backToDashboard": "Back to Dashboard",
+      "methods": {
+        "UPI": "UPI",
+        "CARD": "Card",
+        "CASH": "Cash"
+      }
+    },
+    "receipt": {
+      "title": "Payment Receipt",
+      "transactionId": "Transaction ID",
+      "date": "Date",
+      "method": "Payment Method",
+      "amount": "Amount",
+      "account": "Account",
+      "provider": "Provider",
+      "status": "Status"
+    }
+  },
+  "grievances": {
+    "title": "Grievances",
+    "myGrievances": "My Grievances",
+    "submitNew": "Submit Grievance",
+    "noGrievances": "No grievances found",
+    "noGrievancesDesc": "You haven't submitted any grievances yet.",
+    "filters": {
+      "all": "All",
+      "open": "Open",
+      "inProgress": "In Progress",
+      "resolved": "Resolved"
+    },
+    "form": {
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your issue in detail (10-500 characters)",
+      "photoUrl": "Photo URL (Optional)",
+      "photoUrlPlaceholder": "https://example.com/photo.jpg",
+      "charCount": "{count}/500 characters",
+      "submit": "Submit Grievance",
+      "success": "Grievance submitted successfully"
+    },
+    "tracking": {
+      "title": "Track Grievance",
+      "referenceNumber": "Reference Number",
+      "category": "Category",
+      "status": "Status",
+      "submittedAt": "Submitted",
+      "updatedAt": "Last Updated",
+      "updates": "Status Updates"
+    },
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In Progress",
+      "RESOLVED": "Resolved",
+      "REJECTED": "Rejected",
+      "CLOSED": "Closed"
+    }
+  },
+  "connections": {
+    "title": "Connections",
+    "myRequests": "My Requests",
+    "newConnection": "New Connection",
+    "noConnections": "No connection requests",
+    "noConnectionsDesc": "You haven't applied for any new connections.",
+    "applyNew": "Apply for New Connection",
+    "form": {
+      "serviceType": "Service Type",
+      "address": "Address",
+      "addressPlaceholder": "Enter your full address",
+      "documents": "Documents",
+      "submit": "Submit Request",
+      "success": "Connection request submitted"
+    },
+    "tracking": {
+      "title": "Track Connection",
+      "referenceNumber": "Reference Number",
+      "status": "Status",
+      "timeline": "Timeline"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under Review",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Settings",
+    "personalInfo": "Personal Information",
+    "name": "Full Name",
+    "mobile": "Mobile Number",
+    "aadhaar": "Aadhaar (Last 4 digits)",
+    "language": "Language Preference",
+    "save": "Save Changes",
+    "saved": "Profile updated successfully",
+    "privacyCenter": "Privacy Center",
+    "dangerZone": "Danger Zone",
+    "privacy": {
+      "title": "Privacy Center",
+      "subtitle": "Manage your data and privacy settings (DPDP Act)",
+      "myData": "My Data",
+      "consents": "Consents",
+      "exportData": "Export My Data",
+      "exportDataDesc": "Download all your personal data as JSON",
+      "exportButton": "Export Data",
+      "auditLog": "Audit Log",
+      "deleteAccount": "Delete Account",
+      "deleteWarning": "This action cannot be undone. All your data will be permanently deleted.",
+      "deleteConfirm": "I understand, delete my account"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "noNotifications": "No notifications",
+    "noNotificationsDesc": "You'll see your notification history here."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "billing": "Billing",
+    "accounts": "Accounts",
+    "paymentHistory": "Payment History",
+    "connections": "Connections",
+    "myRequests": "My Requests",
+    "newConnection": "New Connection",
+    "grievances": "Grievances",
+    "myGrievances": "My Grievances",
+    "submitNew": "Submit New",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "privacyCenter": "Privacy Center"
+  }
+}

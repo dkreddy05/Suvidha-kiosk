@@ -1,0 +1,21 @@
+{
+  "name": "suvidha-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:citizen": "npm run dev -w @suvidha/citizen",
+    "dev:admin": "npm run dev -w @suvidha/admin",
+    "dev": "concurrently \"npm run dev:citizen\" \"npm run dev:admin\"",
+    "build": "npm run build -w @suvidha/ui && npm run build -w @suvidha/citizen && npm run build -w @suvidha/admin",
+    "lint": "npm run lint -w @suvidha/citizen && npm run lint -w @suvidha/admin"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "concurrently": "^9.0.1",
+    "typescript": "^5.6.3"
+  }
+}

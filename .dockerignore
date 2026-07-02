@@ -1,0 +1,16 @@
+**/.git
+**/.next
+**/node_modules
+**/target
+**/dist
+.idea
+.vscode
+*.log
+backups/
+logs/
+.env
+.env.*
+*.jks
+*.p12
+*.pem
+**/src/main/resources/applicationex.properties
