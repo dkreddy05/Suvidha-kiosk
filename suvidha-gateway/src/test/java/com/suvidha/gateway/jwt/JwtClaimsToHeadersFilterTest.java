@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class JwtClaimsToHeadersFilterTest {
 
     private JwtToken jwtToken;
@@ -53,7 +56,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.getId()).thenReturn("test-jti");
 
         when(jwtToken.validate(anyString())).thenReturn(claims);
-        lenient().when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
@@ -87,7 +90,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.getId()).thenReturn("test-jti");
 
         when(jwtToken.validate(anyString())).thenReturn(claims);
-        lenient().when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
