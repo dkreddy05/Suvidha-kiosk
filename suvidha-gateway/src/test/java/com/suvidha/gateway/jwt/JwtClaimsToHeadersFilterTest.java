@@ -38,7 +38,7 @@ class JwtClaimsToHeadersFilterTest {
         jwtToken = mock(JwtToken.class);
         filter = new JwtClaimsToHeadersFilter(jwtToken, new SimpleMeterRegistry());
         chain = mock(GatewayFilterChain.class);
-        when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
+        lenient().when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
     }
 
     @Test
@@ -53,7 +53,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.getId()).thenReturn("test-jti");
 
         when(jwtToken.validate(anyString())).thenReturn(claims);
-        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+        lenient().when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
@@ -87,7 +87,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.getId()).thenReturn("test-jti");
 
         when(jwtToken.validate(anyString())).thenReturn(claims);
-        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+        lenient().when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
