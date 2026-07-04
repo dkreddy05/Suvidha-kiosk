@@ -22,6 +22,10 @@
     <springProperty scope="context" name="LOG_FILE_TOTAL_SIZE_CAP"
                     source="suvidha.logging.file.total-size-cap"
                     defaultValue="10GB"/>
+    <springProperty scope="context" name="LOG_PATH"
+                    source="logging.file.path"
+                    defaultValue="logs"/>
+
 
     <conversionRule conversionWord="mask"
                     converterClass="com.suvidha.common.logging.SensitiveDataMaskingConverter"/>
@@ -90,9 +94,9 @@
     <!-- ── JSON File Appender with rolling policy ─────────────────── -->
     <springProfile name="!test">
         <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>/var/log/suvidha/${APP_NAME}.log</file>
+            <file>${LOG_PATH}/${APP_NAME}.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                <fileNamePattern>/var/log/suvidha/${APP_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
                 <maxFileSize>${LOG_FILE_MAX_SIZE}</maxFileSize>
                 <maxHistory>${LOG_FILE_MAX_HISTORY}</maxHistory>
                 <totalSizeCap>${LOG_FILE_TOTAL_SIZE_CAP}</totalSizeCap>
@@ -229,9 +233,9 @@
     <!-- ── Audit trail logger (separate file) ─────────────────────── -->
     <springProfile name="!test">
         <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>/var/log/suvidha/${APP_NAME}-audit.log</file>
+            <file>${LOG_PATH}/${APP_NAME}-audit.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                <fileNamePattern>/var/log/suvidha/${APP_NAME}-audit-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-audit-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
                 <maxFileSize>50MB</maxFileSize>
                 <maxHistory>90</maxHistory>
                 <totalSizeCap>5GB</totalSizeCap>
