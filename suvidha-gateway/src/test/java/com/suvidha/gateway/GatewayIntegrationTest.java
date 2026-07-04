@@ -2,6 +2,7 @@ package com.suvidha.gateway;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,6 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import reactor.core.publisher.Mono;
@@ -59,8 +61,7 @@ class GatewayIntegrationTest {
         when(unauthenticatedRateLimiter.isAllowed(anyString(), anyString()))
                 .thenReturn(Mono.just(new RedisRateLimiter.Response(true, Collections.emptyMap())));
 
-        // Mock JWT validation to authorize request in SecurityWebFilterChain
-        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("9876543210");
         when(claims.get("role", String.class)).thenReturn("USER");
         when(jwtToken.validate(anyString())).thenReturn(claims);
