@@ -173,7 +173,8 @@ public class JwtToken {
       Boolean exists = redisTemplate.hasKey(BLACKLIST_KEY_PREFIX + jti);
       return Boolean.TRUE.equals(exists);
     } catch (Exception e) {
-      return false;
+      log.error("Redis blacklist check failed — denying request (fail-closed): {}", e.getMessage());
+      return true; // fail-closed: treat as blacklisted if Redis is unreachable
     }
   }
 }

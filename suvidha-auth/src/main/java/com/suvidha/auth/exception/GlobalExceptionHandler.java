@@ -122,6 +122,15 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of(ex.getCode(), ex.getMessage(), rid));
     }
 
+    @ExceptionHandler(RefreshTokenInvalidException.class)
+    public ResponseEntity<ApiErrorResponse> handleRefreshTokenInvalid(RefreshTokenInvalidException ex,
+            HttpServletRequest request) {
+        String rid = requestId(request);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(REQUEST_ID_HEADER, rid)
+                .body(ApiErrorResponse.of(ex.getCode(), ex.getMessage(), rid));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
             HttpServletRequest request) {

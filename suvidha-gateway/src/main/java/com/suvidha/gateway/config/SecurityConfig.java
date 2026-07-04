@@ -30,7 +30,9 @@ import java.util.List;
 
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.security.SecureRandom;
 
 @Configuration
@@ -38,6 +40,9 @@ import java.security.SecureRandom;
 public class SecurityConfig {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    @org.springframework.beans.factory.annotation.Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173}")
+    private String corsAllowedOriginsStr;
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(
@@ -101,7 +106,7 @@ public class SecurityConfig {
             exchange.getResponse().getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
             exchange.getResponse().getHeaders().add("X-Content-Security-Policy-Nonce", nonce);
             exchange.getResponse().getHeaders().add("Content-Security-Policy",
-                    "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'; style-src 'self' 'nonce-" + nonce + "'; img-src 'self' data:; font-src 'self'; connect-src 'self' http://localhost:8080");
+                    "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'; style-src 'self' 'nonce-" + nonce + "'; img-src 'self' data:; font-src 'self'; connect-src 'self'");
             return chain.filter(exchange);
         };
     }
@@ -112,13 +117,14 @@ public class SecurityConfig {
         return Base64.getEncoder().encodeToString(bytes);
     }
 
-    static Mono<Void> writeError(ServerWebExchange exchange, HttpStatus status,
-                                 String error, String message, ObjectMapper objectMapper) {
+    Mono<Void> writeError(ServerWebExchange exchange, HttpStatus status,
+                         String error, String message, ObjectMapper objectMapper) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         String origin = exchange.getRequest().getHeaders().getFirst("Origin");
-        if (origin != null && (origin.equals("http://localhost:3000") || origin.equals("http://localhost:3001") || origin.equals("http://localhost:5173"))) {
+        Set<String> allowedOrigins = Set.of(corsAllowedOriginsStr.split(","));
+        if (origin != null && allowedOrigins.contains(origin.trim())) {
             exchange.getResponse().getHeaders().add("Access-Control-Allow-Origin", origin);
             exchange.getResponse().getHeaders().add("Access-Control-Allow-Credentials", "true");
             exchange.getResponse().getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");

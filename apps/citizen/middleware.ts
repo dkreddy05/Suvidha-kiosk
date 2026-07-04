@@ -5,6 +5,25 @@ const protectedPathPrefixes = ['/dashboard', '/billing', '/connections', '/griev
 
 const publicPaths = ['/login', '/register', '/api'];
 
+/**
+ * Lightweight JWT expiry check — decodes the payload without verifying signature.
+ * Full validation is handled by the API gateway.
+ */
+function isJwtExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
+    if (!payload.exp) return true;
+    // Add 30-second buffer for clock skew
+    return payload.exp * 1000 < Date.now() - 30_000;
+  } catch {
+    return true;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -30,7 +49,7 @@ export function middleware(request: NextRequest) {
   if (isProtected) {
     const sessionCookie = request.cookies.get('session');
 
-    if (!sessionCookie) {
+    if (!sessionCookie || !sessionCookie.value || isJwtExpired(sessionCookie.value)) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);

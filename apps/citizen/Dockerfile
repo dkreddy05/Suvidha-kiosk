@@ -19,9 +19,9 @@ RUN npm run build -w @suvidha/citizen
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-    COPY --from=builder /app/apps/citizen/.next ./.next
-    COPY --from=builder /app/apps/citizen/next.config.ts ./next.config.ts
-    COPY --from=builder /app/apps/citizen/package.json ./package.json
-    COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/citizen/.next ./.next
+COPY --from=builder /app/apps/citizen/next.config.ts ./next.config.ts
+COPY --from=builder /app/apps/citizen/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3000
 CMD ["npx", "next", "start", "-p", "3000"]

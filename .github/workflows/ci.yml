@@ -41,7 +41,10 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/suvidha_test_db
           SPRING_DATASOURCE_USERNAME: suvidha
           SPRING_DATASOURCE_PASSWORD: test_password
-          REDIS_HOST: localhost
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
+          SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+          JPA_DDL_AUTO: update
 
       - name: Build all modules
         run: mvn clean package -DskipTests -B

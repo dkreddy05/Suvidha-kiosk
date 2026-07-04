@@ -73,9 +73,9 @@ services:
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
-      REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-not-used-rsa-only}
       AADHAR_ENCRYPTION_KEY: ${AADHAR_ENCRYPTION_KEY:-change-me-to-32-byte-aes-key!!!!}
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SERVER_PORT: 8081
@@ -114,9 +114,8 @@ services:
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
-      REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8082
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
@@ -153,7 +152,7 @@ services:
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
       SERVER_PORT: 8083
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
+
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     healthcheck:
@@ -187,7 +186,7 @@ services:
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
       SERVER_PORT: 8084
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
+
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     healthcheck:
@@ -220,10 +219,9 @@ services:
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
-      REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8085
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     volumes:
       - ./logs/notification-service:/workspace/logs
@@ -259,10 +257,9 @@ services:
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
-      REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8086
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     healthcheck:
@@ -295,17 +292,19 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
       SPRING_DATASOURCE_USERNAME: suvidha
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
-      REDIS_HOST: suvidha-redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       BILLING_SERVICE_URL: http://suvidha-billing:8082
       GRIEVANCE_SERVICE_URL: http://suvidha-grievance:8083
       CONNECTIONS_SERVICE_URL: http://suvidha-connections:8084
       NOTIFICATION_SERVICE_URL: http://suvidha-notification:8085
       ADMIN_SERVICE_URL: http://suvidha-admin:8086
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-256-bit-key-minimum-32-characters}
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       suvidha-auth:
         condition: service_healthy
@@ -319,6 +318,12 @@ services:
         condition: service_healthy
       suvidha-admin:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 120s
     networks:
       - suvidha-net
 

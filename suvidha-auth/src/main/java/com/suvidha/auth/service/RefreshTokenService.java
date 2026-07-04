@@ -30,15 +30,15 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken verifyRefreshToken(String token) {
         RefreshToken refreshToken = refreshTokenRepo.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new com.suvidha.auth.exception.RefreshTokenInvalidException("Invalid refresh token"));
 
         if (refreshToken.isRevoked()) {
-            throw new RuntimeException("Refresh token has been revoked");
+            throw new com.suvidha.auth.exception.RefreshTokenInvalidException("Refresh token has been revoked");
         }
 
         if (refreshToken.isExpired()) {
             refreshTokenRepo.delete(refreshToken);
-            throw new RuntimeException("Refresh token has expired");
+            throw new com.suvidha.auth.exception.RefreshTokenInvalidException("Refresh token has expired");
         }
 
         return refreshToken;
@@ -47,7 +47,7 @@ public class RefreshTokenService {
     @Transactional
     public void revokeRefreshToken(String token) {
         RefreshToken refreshToken = refreshTokenRepo.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new com.suvidha.auth.exception.RefreshTokenInvalidException("Invalid refresh token"));
         refreshToken.setRevoked(true);
         refreshTokenRepo.save(refreshToken);
     }

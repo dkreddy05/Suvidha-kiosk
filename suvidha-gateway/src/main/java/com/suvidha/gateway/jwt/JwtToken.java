@@ -137,13 +137,18 @@ public class JwtToken {
     }
 
     public String getMobile(String token) {
+        return validate(token).get("mobile", String.class);
+    }
+
+    public String getCitizenId(String token) {
         return validate(token).getSubject();
     }
 
     public boolean isTokenValid(String token) {
         try {
             validate(token);
-            return true;
+            // Also check blacklist (fail-closed: if Redis is down, deny)
+            return !isBlacklisted(token).block(java.time.Duration.ofSeconds(2));
         } catch (Exception e) {
             return false;
         }
