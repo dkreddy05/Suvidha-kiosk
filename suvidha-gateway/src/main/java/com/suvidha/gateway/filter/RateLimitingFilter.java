@@ -52,6 +52,12 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                 .register(meterRegistry);
     }
 
+    private static class RateLimiterUnreachableException extends RuntimeException {
+        public RateLimiterUnreachableException(Throwable cause) {
+            super(cause);
+        }
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!rateLimitEnabled) return chain.filter(exchange);
@@ -72,6 +78,7 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
 
         return keyResolver.resolve(exchange).flatMap(key ->
             limiter.isAllowed(path, key)
+                .onErrorMap(throwable -> new RateLimiterUnreachableException(throwable))
                 .flatMap(response -> {
                     if (response.isAllowed()) {
                         return chain.filter(exchange);
@@ -79,8 +86,8 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                         return handleRateLimitExceeded(exchange, response, key, path);
                     }
                 })
-                .onErrorResume(throwable -> {
-                    log.error("Redis unreachable — failing closed for rate limiter: {}", throwable.getMessage());
+                .onErrorResume(RateLimiterUnreachableException.class, throwable -> {
+                    log.error("Redis unreachable — failing closed for rate limiter: {}", throwable.getCause().getMessage());
                     exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
                     exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
                     Map<String, Object> body = Map.of(
@@ -103,6 +110,7 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                                        RedisRateLimiter limiter, String label) {
         return keyResolver.resolve(exchange).flatMap(key ->
             limiter.isAllowed(label, key)
+                .onErrorMap(throwable -> new RateLimiterUnreachableException(throwable))
                 .flatMap(response -> {
                     if (response.isAllowed()) {
                         return chain.filter(exchange);
@@ -110,8 +118,8 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                         return handleRateLimitExceeded(exchange, response, key, label);
                     }
                 })
-                .onErrorResume(throwable -> {
-                    log.error("Redis unreachable — failing closed for rate limiter on {}: {}", label, throwable.getMessage());
+                .onErrorResume(RateLimiterUnreachableException.class, throwable -> {
+                    log.error("Redis unreachable — failing closed for rate limiter on {}: {}", label, throwable.getCause().getMessage());
                     exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
                     exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
                     Map<String, Object> body = Map.of(

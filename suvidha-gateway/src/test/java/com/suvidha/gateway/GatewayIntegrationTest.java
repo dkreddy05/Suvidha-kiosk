@@ -26,7 +26,8 @@ import java.util.Collections;
         "gateway.ratelimit.requestedTokens=1",
         "spring.cloud.gateway.routes[0].id=test-route",
         "spring.cloud.gateway.routes[0].uri=http://localhost:8089",
-        "spring.cloud.gateway.routes[0].predicates[0]=Path=/api/test/**"
+        "spring.cloud.gateway.routes[0].predicates[0]=Path=/api/test/**",
+        "spring.cloud.gateway.routes[0].metadata.response-timeout=2000"
     }
 )
 @WireMockTest(httpPort = 8089)
@@ -42,6 +43,9 @@ class GatewayIntegrationTest {
     @MockBean(name = "unauthenticatedRateLimiter")
     private RedisRateLimiter unauthenticatedRateLimiter;
 
+    @MockBean
+    private com.suvidha.gateway.jwt.JwtToken jwtToken;
+
     @Test
     void shouldReturn504WhenDownstreamTimesOut() {
         // WireMock setup: delay response beyond timeout
@@ -55,12 +59,15 @@ class GatewayIntegrationTest {
         when(unauthenticatedRateLimiter.isAllowed(anyString(), anyString()))
                 .thenReturn(Mono.just(new RedisRateLimiter.Response(true, Collections.emptyMap())));
 
+        // Mock JWT validation to authorize request in SecurityWebFilterChain
+        io.jsonwebtoken.Claims claims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
+        when(claims.getSubject()).thenReturn("9876543210");
+        when(claims.get("role", String.class)).thenReturn("USER");
+        when(jwtToken.validate(anyString())).thenReturn(claims);
+        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+
         webClient.get().uri("/api/test/timeout")
-                // Need a valid JWT to pass SecurityWebFilterChain if not permitAll,
-                // Assuming SecurityConfig requires auth, we pass a dummy token.
-                // Wait, in integration tests, we might need a real mocked JWT or permit the path.
-                // For simplicity, we assume we bypass or mock.
-                // Actually, if we mock RedisRateLimiter, we need to bypass auth or provide token.
+                .header(HttpHeaders.AUTHORIZATION, "Bearer dummy-token")
                 .exchange()
                 .expectStatus().isEqualTo(504)
                 .expectBody()

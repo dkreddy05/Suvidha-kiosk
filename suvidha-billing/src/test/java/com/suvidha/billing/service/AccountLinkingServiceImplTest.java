@@ -216,7 +216,7 @@ class AccountLinkingServiceImplTest {
         when(otpRedisService.sanitizeMobile("9876543210")).thenReturn("9876543210");
         when(otpRedisService.getContext("9876543210")).thenReturn(Optional.of(ctx));
         when(otpRedisService.verifyOtp("9876543210", "123456")).thenReturn(true);
-        when(serviceAccountRepository.findByAccountNoAndServiceType("E123456789", ServiceType.ELECTRICITY))
+        when(serviceAccountRepository.findByAccountNoAndServiceTypeForUpdate("E123456789", ServiceType.ELECTRICITY))
                 .thenReturn(Optional.empty());
         when(serviceAccountRepository.save(any(ServiceAccount.class))).thenAnswer(inv -> inv.getArgument(0));
         doNothing().when(otpRedisService).deleteAllKeys("9876543210");
