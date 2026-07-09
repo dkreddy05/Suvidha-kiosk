@@ -51,7 +51,9 @@ public class ConnectionRequestController {
     public ResponseEntity<ConnectionStatusResponse> updateStatus(
             @PathVariable String requestId,
             @Valid @RequestBody ConnectionStatusUpdateRequest update) {
-        return ResponseEntity.ok(connectionRequestService.updateStatus(requestId, currentCitizenId(), update));
+        String citizenId = currentCitizenId();
+        boolean isAdmin = currentIsAdmin();
+        return ResponseEntity.ok(connectionRequestService.updateStatus(requestId, citizenId, isAdmin, update));
     }
 
     private String currentCitizenId() {
@@ -60,5 +62,12 @@ public class ConnectionRequestController {
             throw new IllegalStateException("Missing authenticated citizen");
         }
         return authentication.getName();
+    }
+
+    private boolean currentIsAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

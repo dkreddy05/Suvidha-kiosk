@@ -1,8 +1,10 @@
 package com.suvidha.billing.config;
 
 import com.suvidha.billing.security.JwtAuthenticationFilter;
+import com.suvidha.billing.security.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,7 +22,14 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
+    public JwtAuthenticationFilter billingJwtAuthenticationFilter(JwtUtil jwtUtil,
+                                                                   StringRedisTemplate redisTemplate) {
+        return new JwtAuthenticationFilter(jwtUtil, redisTemplate);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter billingJwtAuthenticationFilter)
             throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.csrf(csrf -> csrf.disable());
@@ -36,7 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/billing/accounts/link/**").authenticated()
                 .anyRequest().authenticated());
 
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(billingJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

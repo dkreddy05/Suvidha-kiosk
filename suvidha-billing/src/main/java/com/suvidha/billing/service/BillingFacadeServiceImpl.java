@@ -10,13 +10,16 @@ import com.suvidha.billing.entity.Transaction;
 import com.suvidha.billing.enums.BillStatus;
 import com.suvidha.billing.enums.PaymentMode;
 import com.suvidha.billing.enums.ServiceType;
+import com.suvidha.billing.exception.DuplicateRequestException;
 import com.suvidha.billing.exception.UnauthorizedException;
 import com.suvidha.billing.repository.BillRepository;
 import com.suvidha.billing.repository.ServiceAccountRepository;
 import com.suvidha.billing.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -115,11 +118,13 @@ public class BillingFacadeServiceImpl implements BillingFacadeService {
         String mockOrderId = "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
 
         bills.forEach(b -> {
+            BigDecimal billAmount = (b.getRemainingBalance() != null ? b.getRemainingBalance() : b.getTotalAmount())
+                    .setScale(2, RoundingMode.HALF_UP);
             Transaction tx = Transaction.builder()
                     .billId(b.getId())
                     .citizenId(citizenId)
                     .razorpayOrderId(mockOrderId)
-                    .amount(totalAmount)
+                    .amount(billAmount)
                     .status("CREATED")
                     .paymentMethod(req.getPaymentMode().name())
                     .build();
@@ -147,21 +152,32 @@ public class BillingFacadeServiceImpl implements BillingFacadeService {
     }
 
     private PaymentConfirmDTO processPayment(ConfirmPaymentRequest req, String idempotencyKey, String citizenId) {
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            transactionRepository.findByIdempotencyKey(idempotencyKey)
+                .ifPresent(existing -> {
+                    if (!existing.getRazorpayOrderId().equals(req.getOrderId())) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Idempotency key already associated with a different order");
+                    }
+                });
+        }
+
         List<Transaction> txs = transactionRepository.findAllByRazorpayOrderIdForUpdate(req.getOrderId());
         if (txs.isEmpty()) {
             throw new IllegalArgumentException("Order not found: " + req.getOrderId());
         }
 
-        Transaction tx = txs.get(0);
-
-        if (tx.getCitizenId() != null && !tx.getCitizenId().equals(citizenId)) {
+        // Verify ownership using the first transaction (all share the same citizenId)
+        Transaction firstTx = txs.get(0);
+        if (firstTx.getCitizenId() != null && !firstTx.getCitizenId().equals(citizenId)) {
             throw new UnauthorizedException("Access denied to transaction " + req.getOrderId());
         }
 
-        if ("CAPTURED".equals(tx.getStatus())) {
+        // Idempotency: if already captured, return cached result
+        if ("CAPTURED".equals(firstTx.getStatus())) {
             PaymentConfirmDTO cached = PaymentConfirmDTO.builder()
-                    .paymentId(tx.getRazorpayPaymentId())
-                    .receiptUrl("/api/v1/billing/receipt/" + tx.getRazorpayPaymentId())
+                    .paymentId(firstTx.getRazorpayPaymentId())
+                    .receiptUrl("/api/v1/billing/receipt/" + firstTx.getRazorpayPaymentId())
                     .build();
             if (idempotencyKey != null && !idempotencyKey.isBlank()) {
                 idempotencyService.cacheResponse(idempotencyKey, cached);
@@ -171,15 +187,19 @@ public class BillingFacadeServiceImpl implements BillingFacadeService {
 
         verifyRazorpaySignature(req);
 
-        tx.setRazorpayPaymentId(req.getPaymentId());
-        tx.setStatus("CAPTURED");
-        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            tx.setIdempotencyKey(idempotencyKey);
+        // Mark ALL transactions in this order as CAPTURED — not just the first one
+        for (Transaction tx : txs) {
+            tx.setRazorpayPaymentId(req.getPaymentId());
+            tx.setStatus("CAPTURED");
+            if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+                tx.setIdempotencyKey(idempotencyKey);
+            }
         }
-        transactionRepository.save(tx);
+        transactionRepository.saveAll(txs);
 
-        for (Transaction t : txs) {
-            billRepository.findById(t.getBillId()).ifPresent(bill -> {
+        // Mark all associated bills as PAID
+        for (Transaction tx : txs) {
+            billRepository.findById(tx.getBillId()).ifPresent(bill -> {
                 bill.setStatus(BillStatus.PAID);
                 bill.setAmountPaid(bill.getTotalAmount());
                 bill.setRemainingBalance(BigDecimal.ZERO);

@@ -15,16 +15,10 @@ ALTER TABLE billing.transaction
 -- Add index on bill_id for FK lookup performance
 CREATE INDEX IF NOT EXISTS idx_transaction_bill_id ON billing.transaction(bill_id);
 
--- Cross-schema FK: service_account.citizen_id → auth.citizens_table.id
--- Ensures every service account belongs to a real citizen.
--- ON DELETE SET NULL so citizen deletion doesn't cascade but leaves a trace.
+-- Drop any cross-schema FK constraints (DB isolation means we cannot FK across databases)
+ALTER TABLE billing.service_account DROP CONSTRAINT IF EXISTS fk_service_account_citizen;
 
-ALTER TABLE billing.service_account
-    ADD CONSTRAINT fk_service_account_citizen
-    FOREIGN KEY (citizen_id) REFERENCES auth.citizens_table(id)
-    ON DELETE SET NULL;
-
--- Add index on citizen_id for FK lookup performance
+-- Add index on citizen_id for query performance (no foreign key constraint due to DB isolation)
 CREATE INDEX IF NOT EXISTS idx_service_account_citizen_id ON billing.service_account(citizen_id);
 
 -- Drop the duplicate/unused account_link_requests table.

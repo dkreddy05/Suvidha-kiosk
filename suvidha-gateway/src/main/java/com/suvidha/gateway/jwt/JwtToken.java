@@ -1,21 +1,20 @@
 package com.suvidha.gateway.jwt;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.ParameterizedTypeReference;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.Locator;
 import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.Locator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
@@ -37,9 +36,9 @@ public class JwtToken {
     private final String jwtIssuer;
     private final String jwtAudience;
     private final ReactiveStringRedisTemplate redisTemplate;
+    private final WebClient webClient;
 
     private final Map<String, KeyCacheEntry> rsaKeys = new ConcurrentHashMap<>();
-    private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private volatile Instant lastFetchAttempt = Instant.EPOCH;
@@ -48,127 +47,115 @@ public class JwtToken {
             @Value("${jwt.publicKeyUrl:http://localhost:8081/api/auth/public-key}") String publicKeyUrl,
             @Value("${jwt.issuer:suvidha-auth}") String jwtIssuer,
             @Value("${jwt.audience:suvidha-services}") String jwtAudience,
-            ReactiveStringRedisTemplate redisTemplate) {
+            ReactiveStringRedisTemplate redisTemplate,
+            WebClient.Builder webClientBuilder) {
         this.publicKeyUrl = publicKeyUrl;
         this.jwtIssuer = jwtIssuer;
         this.jwtAudience = jwtAudience;
         this.redisTemplate = redisTemplate;
+        this.webClient = webClientBuilder.build();
     }
 
-    private void refreshKeys() {
+    private Mono<Void> refreshKeysAsync() {
         Instant now = Instant.now();
         boolean anyStale = rsaKeys.values().stream()
                 .anyMatch(e -> now.isAfter(e.fetchedAt().plus(KEY_TTL)));
-        if (!anyStale && !rsaKeys.isEmpty()) return;
-
-        if (lastFetchAttempt.plusSeconds(30).isAfter(now)) return;
+        if (!anyStale && !rsaKeys.isEmpty()) return Mono.empty();
+        if (lastFetchAttempt.plusSeconds(30).isAfter(now)) return Mono.empty();
         lastFetchAttempt = now;
 
         log.info("Fetching/refreshing RSA public keys from auth service");
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(publicKeyUrl))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                List<Map<String, Object>> keysList = objectMapper.readValue(
-                        response.body(), new TypeReference<List<Map<String, Object>>>() {});
-                for (Map<String, Object> keyData : keysList) {
-                    String kid = (String) keyData.getOrDefault("kid", "default");
-                    String pubKeyStr = keyData.containsKey("public_key")
-                            ? (String) keyData.get("public_key")
-                            : (String) keyData.get("publicKey");
-                    if (pubKeyStr == null) continue;
+        return webClient.get()
+                .uri(publicKeyUrl)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                .onErrorResume(e -> {
+                    log.error("Failed to fetch public keys: {}", e.getMessage());
+                    return Mono.empty();
+                })
+                .flatMap(keysList -> {
+                    for (Map<String, Object> keyData : keysList) {
+                        String kid = (String) keyData.getOrDefault("kid", "default");
+                        String pubKeyStr = keyData.containsKey("public_key")
+                                ? (String) keyData.get("public_key")
+                                : (String) keyData.get("publicKey");
+                        if (pubKeyStr == null) continue;
 
-                    pubKeyStr = pubKeyStr
-                            .replace("-----BEGIN PUBLIC KEY-----", "")
-                            .replace("-----END PUBLIC KEY-----", "")
-                            .replaceAll("\\s", "");
-                    try {
-                        byte[] decoded = Base64.getDecoder().decode(pubKeyStr);
-                        KeyFactory kf = KeyFactory.getInstance("RSA");
-                        Key key = kf.generatePublic(new X509EncodedKeySpec(decoded));
-                        rsaKeys.put(kid, new KeyCacheEntry(key, Instant.now()));
-                        log.info("Cached RSA key: {}", kid);
-                    } catch (Exception e) {
-                        log.warn("Failed to parse public key {}: {}", kid, e.getMessage());
+                        pubKeyStr = pubKeyStr
+                                .replace("-----BEGIN PUBLIC KEY-----", "")
+                                .replace("-----END PUBLIC KEY-----", "")
+                                .replaceAll("\\s", "");
+                        try {
+                            byte[] decoded = Base64.getDecoder().decode(pubKeyStr);
+                            KeyFactory kf = KeyFactory.getInstance("RSA");
+                            Key key = kf.generatePublic(new X509EncodedKeySpec(decoded));
+                            rsaKeys.put(kid, new KeyCacheEntry(key, Instant.now()));
+                            log.info("Cached RSA key: {}", kid);
+                        } catch (Exception e) {
+                            log.warn("Failed to parse public key {}: {}", kid, e.getMessage());
+                        }
                     }
-                }
-            } else {
-                log.warn("Auth service returned HTTP {} when fetching public keys", response.statusCode());
-            }
-        } catch (Exception e) {
-            log.error("Failed to fetch/parse public keys from auth service", e);
+                    return Mono.<Void>empty();
+                });
+    }
+
+    private Key resolveKey(JwsHeader jwsHeader) {
+        String alg = jwsHeader.getAlgorithm();
+        if (!"RS256".equals(alg)) {
+            throw new IllegalArgumentException("Unsupported algorithm: " + alg + ". Only RS256 is accepted.");
         }
-    }
-
-    public Claims validate(String token) {
-        Locator<Key> keyLocator = header -> {
-            if (!(header instanceof JwsHeader jwsHeader)) {
-                throw new IllegalArgumentException("Invalid JWT header");
+        String kid = jwsHeader.getKeyId();
+        if (kid == null) {
+            if (rsaKeys.isEmpty()) {
+                throw new IllegalStateException("No RSA public keys available");
             }
-            String alg = jwsHeader.getAlgorithm();
-            if (!"RS256".equals(alg)) {
-                throw new IllegalArgumentException("Unsupported algorithm: " + alg + ". Only RS256 is accepted.");
-            }
-            refreshKeys();
-            String kid = jwsHeader.getKeyId();
-            if (kid == null) {
-                if (rsaKeys.isEmpty()) {
-                    throw new IllegalStateException("No RSA public keys available");
-                }
-                return rsaKeys.values().iterator().next().key();
-            }
-            KeyCacheEntry entry = rsaKeys.get(kid);
-            if (entry == null) {
-                throw new IllegalArgumentException("Unknown key id: " + kid);
-            }
-            return entry.key();
-        };
-
-        return Jwts.parser()
-                .keyLocator(keyLocator)
-                .requireIssuer(jwtIssuer)
-                .requireAudience(jwtAudience)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public String getMobile(String token) {
-        return validate(token).get("mobile", String.class);
-    }
-
-    public String getCitizenId(String token) {
-        return validate(token).getSubject();
-    }
-
-    public boolean isTokenValid(String token) {
-        try {
-            validate(token);
-            // Also check blacklist (fail-closed: if Redis is down, deny)
-            return !isBlacklisted(token).block(java.time.Duration.ofSeconds(2));
-        } catch (Exception e) {
-            return false;
+            return rsaKeys.values().iterator().next().key();
         }
+        KeyCacheEntry entry = rsaKeys.get(kid);
+        if (entry == null) {
+            throw new IllegalArgumentException("Unknown key id: " + kid);
+        }
+        return entry.key();
     }
 
-    public reactor.core.publisher.Mono<Boolean> isBlacklisted(String token) {
-        try {
-            Claims claims = validate(token);
-            String jti = claims.getId();
-            if (jti == null || jti.isBlank()) {
-                return reactor.core.publisher.Mono.just(false);
-            }
-            return redisTemplate.hasKey(BLACKLIST_KEY_PREFIX + jti)
-                    .onErrorResume(e -> {
-                        log.error("Redis blacklist check failed — denying request (fail-closed): {}", e.getMessage());
-                        return reactor.core.publisher.Mono.just(true);
-                    });
-        } catch (Exception e) {
-            return reactor.core.publisher.Mono.just(true);
+    public Mono<Claims> validateAsync(String token) {
+        return refreshKeysAsync().then(Mono.fromCallable(() ->
+            Jwts.parser()
+                    .keyLocator((Locator<Key>) header -> resolveKey((JwsHeader) header))
+                    .requireIssuer(jwtIssuer)
+                    .requireAudience(jwtAudience)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+        ).subscribeOn(Schedulers.boundedElastic()));
+    }
+
+    public Mono<String> getMobileAsync(String token) {
+        return validateAsync(token).map(claims -> claims.get("mobile", String.class));
+    }
+
+    public Mono<String> getCitizenIdAsync(String token) {
+        return validateAsync(token).map(Claims::getSubject);
+    }
+
+    public Mono<Boolean> isTokenValidAsync(String token) {
+        return validateAsync(token)
+                .flatMap(claims -> isBlacklisted(claims.getId()))
+                .onErrorResume(e -> {
+                    log.warn("Token validation failed: {} — {}", e.getClass().getSimpleName(), e.getMessage());
+                    return Mono.just(false);
+                });
+    }
+
+    public Mono<Boolean> isBlacklisted(String jti) {
+        if (jti == null || jti.isBlank()) {
+            return Mono.just(false);
         }
+        return redisTemplate.hasKey(BLACKLIST_KEY_PREFIX + jti)
+                .onErrorResume(e -> {
+                    log.error("Redis blacklist check failed — denying request (fail-closed): {}", e.getMessage());
+                    return Mono.just(true);
+                });
     }
 
     private record KeyCacheEntry(Key key, Instant fetchedAt) {}

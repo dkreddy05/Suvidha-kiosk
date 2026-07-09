@@ -27,7 +27,7 @@ export const notificationsApi = {
       mobile: n.phone_number,
       messageType: n.message_type,
       status: n.status as any,
-      sentAt: n.sentAt || n.created_at,
+      sentAt: n.sent_at || n.created_at,
       messageContent: n.message_content,
     }));
     return {

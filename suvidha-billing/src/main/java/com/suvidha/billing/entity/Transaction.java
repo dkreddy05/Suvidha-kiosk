@@ -29,7 +29,7 @@ public class Transaction {
     @Column(name = "bill_id", nullable = false, columnDefinition = "uuid")
     private UUID billId;
 
-    @Column(name = "razorpay_order_id", nullable = false, unique = true)
+    @Column(name = "razorpay_order_id", nullable = false)
     private String razorpayOrderId;
 
     @Column(name = "razorpay_payment_id")

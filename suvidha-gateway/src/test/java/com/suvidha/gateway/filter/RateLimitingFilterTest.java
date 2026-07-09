@@ -47,15 +47,18 @@ class RateLimitingFilterTest {
     }
 
     @Test
-    @DisplayName("should skip rate limiting for auth routes")
-    void shouldSkipAuthRoutes() {
+    @DisplayName("should apply rate limiting for auth routes (no bypass)")
+    void shouldApplyRateLimitForAuthRoutes() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/auth/login").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        RedisRateLimiter.Response response = new RedisRateLimiter.Response(true, Collections.emptyMap());
+        when(redisRateLimiter.isAllowed(anyString(), anyString())).thenReturn(Mono.just(response));
 
         filter.filter(exchange, chain).block();
 
         verify(chain).filter(exchange);
-        verifyNoInteractions(redisRateLimiter);
+        verify(redisRateLimiter).isAllowed(anyString(), anyString());
     }
 
     @Test

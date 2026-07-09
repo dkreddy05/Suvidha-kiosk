@@ -28,8 +28,6 @@ public class RegisterRequest {
     @Pattern(regexp = "^(en|hi|te|ta)$", message = "Language must be one of: en, hi, te, ta")
     private String languagePreference;
 
-    private Role role;
-
     public RegisterRequest() {
     }
 
@@ -71,13 +69,5 @@ public class RegisterRequest {
 
     public void setLanguagePreference(String languagePreference) {
         this.languagePreference = languagePreference;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 }

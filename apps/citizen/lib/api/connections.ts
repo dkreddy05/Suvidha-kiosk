@@ -68,4 +68,13 @@ export const connectionsApi = {
       updatedAt: new Date().toISOString(),
     };
   },
+
+  linkAccount: async (data: { accountNumber: string; provider: string }): Promise<any> => {
+    const body = {
+      accountNumber: data.accountNumber,
+      utilityType: data.provider,
+    };
+    const response = await apiClient.post('/connections/accounts/link', body);
+    return response.data;
+  },
 };

@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 @Service
-public class SmsStubService {
+@org.springframework.context.annotation.Primary
+public class SmsStubService implements SmsSender {
 
     private static final Logger log = LoggerFactory.getLogger(SmsStubService.class);
 

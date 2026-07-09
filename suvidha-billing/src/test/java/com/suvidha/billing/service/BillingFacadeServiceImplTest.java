@@ -48,6 +48,7 @@ class BillingFacadeServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(transactionRepository.findByIdempotencyKey(anyString())).thenReturn(Optional.empty());
         service = new BillingFacadeServiceImpl(
                 mock(com.suvidha.billing.repository.ServiceAccountRepository.class),
                 billRepository,
@@ -102,7 +103,7 @@ class BillingFacadeServiceImplTest {
         when(idempotencyService.getCachedResponse("idem-key-2")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_new")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenAnswer(inv -> inv.getArgument(0));
 
         PaymentConfirmDTO result = service.confirmPayment(req, "idem-key-2", "citizen-1");
@@ -139,7 +140,7 @@ class BillingFacadeServiceImplTest {
 
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_no_idem")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenAnswer(inv -> inv.getArgument(0));
 
         PaymentConfirmDTO result = service.confirmPayment(req, null, "citizen-1");
@@ -174,7 +175,8 @@ class BillingFacadeServiceImplTest {
 
         assertThat(result.getPaymentId()).isEqualTo("pay_already_done");
         verify(idempotencyService).cacheResponse(eq("idem-key-3"), any(PaymentConfirmDTO.class));
-        verifyNoMoreInteractions(transactionRepository);
+        verify(transactionRepository).findByIdempotencyKey(anyString());
+        verify(transactionRepository).findAllByRazorpayOrderIdForUpdate(anyString());
     }
 
     @Test
@@ -234,7 +236,7 @@ class BillingFacadeServiceImplTest {
         when(idempotencyService.getCachedResponse("idem-key-dupe")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_dupe")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenAnswer(inv -> inv.getArgument(0));
 
         PaymentConfirmDTO firstResult = service.confirmPayment(req, "idem-key-dupe", "citizen-1");
@@ -255,7 +257,7 @@ class BillingFacadeServiceImplTest {
 
         assertThat(secondResult.getPaymentId()).isEqualTo("pay_dupe");
         assertThat(secondResult.getPaymentId()).isNotEqualTo("pay_dupe_2");
-        verify(transactionRepository, times(1)).save(any());
+        verify(transactionRepository, times(1)).saveAll(anyList());
     }
 
     @Test
@@ -283,7 +285,7 @@ class BillingFacadeServiceImplTest {
         when(idempotencyService.getCachedResponse("idem-lock")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_lock")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.confirmPayment(req, "idem-lock", "citizen-1");
@@ -328,7 +330,7 @@ class BillingFacadeServiceImplTest {
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_concurrent"))
                 .thenReturn(List.of(txFirst));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenAnswer(inv -> inv.getArgument(0));
 
         PaymentConfirmDTO firstResult = service.confirmPayment(req, "idem-c1", "citizen-1");
@@ -350,7 +352,7 @@ class BillingFacadeServiceImplTest {
 
         assertThat(secondResult.getPaymentId()).isEqualTo("pay_first");
         assertThat(secondResult.getPaymentId()).isNotEqualTo("pay_second");
-        verify(transactionRepository, times(1)).save(any());
+        verify(transactionRepository, times(1)).saveAll(anyList());
     }
 
     @Test
@@ -378,7 +380,7 @@ class BillingFacadeServiceImplTest {
         when(idempotencyService.getCachedResponse("idem-ver")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_version")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(billRepository.save(any(Bill.class))).thenThrow(new OptimisticLockingFailureException("version conflict"));
 
         assertThatThrownBy(() -> service.confirmPayment(req, "idem-ver", "citizen-1"))

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { billingApi } from '@/lib/api/billing';
+import { connectionsApi } from '@/lib/api/connections';
 import { queryKeys } from '@/lib/query-keys';
 import { STALE_TIMES } from '@/lib/constants';
 
@@ -15,7 +16,7 @@ export function useLinkAccount() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: { accountNumber: string; provider: string }) =>
-      billingApi.linkAccount(data),
+      connectionsApi.linkAccount(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.billing.accounts() });
     },

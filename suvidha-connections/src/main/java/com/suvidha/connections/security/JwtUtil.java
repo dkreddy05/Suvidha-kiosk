@@ -117,5 +117,10 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
+    public String extractMobile(Claims claims) {
+        Object mobile = claims.get("mobile");
+        return mobile != null ? mobile.toString() : null;
+    }
+
     private record KeyCacheEntry(Key key, Instant fetchedAt) {}
 }

@@ -29,6 +29,7 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/health/**", "/actuator/**").permitAll()
+                .requestMatchers("/api/notifications/send-otp", "/api/v1/notifications/send-otp").permitAll()
                 .anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

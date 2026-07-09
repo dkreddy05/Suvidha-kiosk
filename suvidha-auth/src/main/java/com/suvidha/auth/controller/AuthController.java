@@ -30,7 +30,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Value;
 import com.suvidha.auth.token.JwtToken;
+import org.springframework.web.client.RestTemplate;
+import java.util.Map;
 
 @RestController
 @RequestMapping({ "/api/auth", "/api/v1/auth" })
@@ -45,6 +48,9 @@ public class AuthController {
     private final RsaKeyService rsaKeyService;
     private final RefreshTokenService refreshTokenService;
     private final AuditService auditService;
+    private final RestTemplate restTemplate;
+    private final String notificationServiceUrl;
+    private final String activeProfile;
 
     public AuthController(
             AuthenticationService authenticationService,
@@ -53,7 +59,10 @@ public class AuthController {
             JwtToken jwtToken,
             RsaKeyService rsaKeyService,
             RefreshTokenService refreshTokenService,
-            AuditService auditService) {
+            AuditService auditService,
+            RestTemplate restTemplate,
+            @Value("${notification.service.url:http://suvidha-notification:8085}") String notificationServiceUrl,
+            @Value("${spring.profiles.active:prod}") String activeProfile) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.citizenRepo = citizenRepo;
@@ -61,6 +70,9 @@ public class AuthController {
         this.rsaKeyService = rsaKeyService;
         this.refreshTokenService = refreshTokenService;
         this.auditService = auditService;
+        this.restTemplate = restTemplate;
+        this.notificationServiceUrl = notificationServiceUrl;
+        this.activeProfile = activeProfile;
     }
 
     @GetMapping("/health")
@@ -86,7 +98,28 @@ public class AuthController {
         StringBuilder devOtp = new StringBuilder();
         String sessionId = authenticationService.sendOtp(otpRequest.getSessionId(), otpRequest.getMobile(), devOtp);
         auditService.log("SEND_OTP", otpRequest.getMobile(), "OTP sent to mobile", request);
-        return ResponseEntity.ok(new OtpSendResponseDTO(sessionId, "OTP sent.", devOtp.toString()));
+
+        // Notify the notification service to deliver the OTP via SMS
+        try {
+            String normalizedPhone = "+91" + otpRequest.getMobile();
+            Map<String, String> notificationPayload = Map.of(
+                    "phone_number", normalizedPhone,
+                    "otp_code", devOtp.toString(),
+                    "citizen_id", otpRequest.getMobile()
+            );
+            restTemplate.postForEntity(notificationServiceUrl + "/api/notifications/send-otp",
+                    notificationPayload, String.class);
+        } catch (Exception e) {
+            log.warn("Failed to notify notification service: {}", e.getMessage());
+        }
+
+        // Include OTP in response for dev/local profiles
+        String otpValue = devOtp.length() > 0 ? devOtp.toString() : null;
+        if ("dev".equals(activeProfile) || "local".equals(activeProfile)) {
+            log.debug("DEV OTP for {}: {}", otpRequest.getMobile(), otpValue);
+            return ResponseEntity.ok(new OtpSendResponseDTO(sessionId, "OTP sent.", otpValue));
+        }
+        return ResponseEntity.ok(new OtpSendResponseDTO(sessionId, "OTP sent."));
     }
 
     @PostMapping("/verify-otp")

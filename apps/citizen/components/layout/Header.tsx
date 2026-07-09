@@ -15,7 +15,6 @@ import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
 import {
   Avatar,
-  AvatarImage,
   AvatarFallback,
   Button,
   DropdownMenu,
@@ -116,7 +115,6 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 px-2" aria-label="User menu">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="" alt={citizen?.name ?? 'User'} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden lg:flex flex-col items-start text-sm">

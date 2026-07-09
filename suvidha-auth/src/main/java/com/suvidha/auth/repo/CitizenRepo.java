@@ -9,9 +9,7 @@ import com.suvidha.auth.model.Citizen;
 public interface CitizenRepo extends JpaRepository<Citizen, String> {
     Optional<Citizen> findByMobile(String mobile);
 
-    Optional<Citizen> findByAadhar(String aadhar);
-
-    Optional<Citizen> findByAadharAndMobile(String aadhar, String mobile);
+    Optional<Citizen> findByAadharHash(String aadharHash);
 
     Optional<Citizen> findByConsumerId(String consumerId);
 }

@@ -34,12 +34,17 @@ public class BillingController {
     /**
      * GET /api/v1/billing/accounts?mobile={mobile}
      * Returns all active utility accounts for the citizen, each with their latest bill.
-     * Frontend: useAccounts(mobileRaw) hook in useBilling.ts
+     * Only the authenticated citizen can access their own accounts.
      */
     @GetMapping(value = "/accounts", params = "mobile")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<UtilityAccountDTO>> getAccounts(
             @RequestParam String mobile,
             @RequestHeader(value = "X-Kiosk-Id", required = false) String kioskId) {
+        String authenticatedMobile = currentMobile();
+        if (!authenticatedMobile.equals(mobile)) {
+            throw new com.suvidha.billing.exception.UnauthorizedException("Access denied to accounts for another user");
+        }
         return ResponseEntity.ok(billingFacadeService.getAccountsForMobile(mobile));
     }
 

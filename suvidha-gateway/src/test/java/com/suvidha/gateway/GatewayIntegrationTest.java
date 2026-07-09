@@ -64,7 +64,7 @@ class GatewayIntegrationTest {
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("9876543210");
         when(claims.get("role", String.class)).thenReturn("USER");
-        when(jwtToken.validate(anyString())).thenReturn(claims);
+        when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));
         when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         webClient.get().uri("/api/test/timeout")

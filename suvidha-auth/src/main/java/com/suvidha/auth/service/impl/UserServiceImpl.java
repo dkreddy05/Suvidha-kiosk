@@ -10,6 +10,7 @@ import com.suvidha.auth.Dto.UserAuthDto;
 import com.suvidha.auth.exception.InvalidRequestException;
 import com.suvidha.auth.exception.SessionNotVerifiedException;
 import com.suvidha.auth.exception.UserAlreadyExistsException;
+import com.suvidha.auth.model.AadharEncryptionConverter;
 import com.suvidha.auth.model.Citizen;
 import com.suvidha.auth.repo.CitizenRepo;
 import com.suvidha.auth.service.UserService;
@@ -45,11 +46,11 @@ public class UserServiceImpl implements UserService {
 
         String mobile = request.getMobile().trim();
         String aadhar = request.getAadhar();
-        Role role = request.getRole() != null ? request.getRole() : Role.USER;
+        Role role = Role.USER;
 
         boolean mobileExists = citizenRepo.findByMobile(mobile).isPresent();
         boolean aadharExists = (!allowTestAadhar || !aadhar.startsWith("AUTO_"))
-                && citizenRepo.findByAadhar(aadhar).isPresent();
+                && citizenRepo.findByAadharHash(AadharEncryptionConverter.generateAadharHash(aadhar)).isPresent();
 
         if (mobileExists || aadharExists) {
             throw new UserAlreadyExistsException("Registration failed.");
@@ -79,7 +80,7 @@ public class UserServiceImpl implements UserService {
                 aadhar,
                 request.getName().trim(),
                 request.getLanguagePreference().trim(),
-                request.getRole(),
+                Role.USER,
                 Instant.now());
         newUser.setConsumerId(consumerId);
         Citizen savedUser = citizenRepo.save(newUser);

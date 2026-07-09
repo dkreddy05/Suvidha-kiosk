@@ -11,6 +11,11 @@ public class OtpSendResponseDTO {
     public OtpSendResponseDTO() {
     }
 
+    public OtpSendResponseDTO(String sessionId, String message) {
+        this.sessionId = sessionId;
+        this.message = message;
+    }
+
     public OtpSendResponseDTO(String sessionId, String message, String devOtp) {
         this.sessionId = sessionId;
         this.message = message;

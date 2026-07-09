@@ -373,7 +373,7 @@ export default function DashboardPage() {
                 <AccountCard key={account.id} account={account} />
               ))}
               <Link
-                href="/billing/link"
+                href="/connections/link"
                 className="flex shrink-0 w-64 items-center justify-center rounded-xl border-2 border-dashed border-border bg-white dark:bg-surface-dark p-4 transition-all duration-200 hover:border-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-900/10 group"
               >
                 <div className="flex flex-col items-center gap-2 text-muted dark:text-muted-dark group-hover:text-brand-500 transition-colors">

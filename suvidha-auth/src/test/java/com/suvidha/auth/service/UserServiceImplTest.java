@@ -1,11 +1,11 @@
 package com.suvidha.auth.service;
 
 import com.suvidha.auth.Dto.RegisterRequest;
-import com.suvidha.auth.Dto.Role;
 import com.suvidha.auth.Dto.UserAuthDto;
 import com.suvidha.auth.exception.InvalidRequestException;
 import com.suvidha.auth.exception.SessionNotVerifiedException;
 import com.suvidha.auth.exception.UserAlreadyExistsException;
+import com.suvidha.auth.model.AadharEncryptionConverter;
 import com.suvidha.auth.model.Citizen;
 import com.suvidha.auth.repo.CitizenRepo;
 import com.suvidha.auth.service.impl.UserServiceImpl;
@@ -43,6 +43,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        System.setProperty("AADHAR_BLIND_INDEX_KEY", "test-blind-index-key-32bytes!");
         userService = new UserServiceImpl(citizenRepo, redisTemplate);
         lenient().when(redisTemplate.opsForHash()).thenReturn(hashOperations);
         lenient().when(citizenRepo.findByConsumerId(anyString())).thenReturn(Optional.empty());
@@ -56,7 +57,6 @@ class UserServiceImplTest {
         req.setAadhar("123456789012");
         req.setName("Test User");
         req.setLanguagePreference("en");
-        req.setRole(Role.USER);
         return req;
     }
 
@@ -70,7 +70,6 @@ class UserServiceImplTest {
         req.setAadhar("AUTO_TEST");
         req.setName("Test User");
         req.setLanguagePreference("en");
-        req.setRole(Role.USER);
 
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("status", "VERIFIED");
@@ -109,7 +108,7 @@ class UserServiceImplTest {
         RegisterRequest req = validRequest();
 
         when(citizenRepo.findByMobile("9876543210")).thenReturn(Optional.of(new Citizen()));
-        when(citizenRepo.findByAadhar("123456789012")).thenReturn(Optional.empty());
+        when(citizenRepo.findByAadharHash(anyString())).thenReturn(Optional.empty());
 
         UserAlreadyExistsException ex = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.registerUser(req));
@@ -123,7 +122,7 @@ class UserServiceImplTest {
         RegisterRequest req = validRequest();
 
         when(citizenRepo.findByMobile("9876543210")).thenReturn(Optional.empty());
-        when(citizenRepo.findByAadhar("123456789012")).thenReturn(Optional.of(new Citizen()));
+        when(citizenRepo.findByAadharHash(anyString())).thenReturn(Optional.of(new Citizen()));
 
         UserAlreadyExistsException ex = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.registerUser(req));
@@ -137,7 +136,7 @@ class UserServiceImplTest {
         RegisterRequest req = validRequest();
 
         when(citizenRepo.findByMobile("9876543210")).thenReturn(Optional.empty());
-        when(citizenRepo.findByAadhar("123456789012")).thenReturn(Optional.of(new Citizen()));
+        when(citizenRepo.findByAadharHash(anyString())).thenReturn(Optional.of(new Citizen()));
 
         UserAlreadyExistsException ex = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.registerUser(req));
@@ -182,13 +181,13 @@ class UserServiceImplTest {
         RegisterRequest req = validRequest();
 
         when(citizenRepo.findByMobile("9876543210")).thenReturn(Optional.of(new Citizen()));
-        when(citizenRepo.findByAadhar("123456789012")).thenReturn(Optional.empty());
+        when(citizenRepo.findByAadharHash(anyString())).thenReturn(Optional.empty());
 
         assertThrows(UserAlreadyExistsException.class,
                 () -> userService.registerUser(req));
 
         verify(citizenRepo).findByMobile("9876543210");
-        verify(citizenRepo).findByAadhar("123456789012");
+        verify(citizenRepo).findByAadharHash(anyString());
     }
 
     @Test
@@ -200,10 +199,9 @@ class UserServiceImplTest {
         req.setAadhar("AUTO_TEST");
         req.setName("Test User");
         req.setLanguagePreference("en");
-        req.setRole(Role.USER);
 
         when(citizenRepo.findByMobile("9876543210")).thenReturn(Optional.empty());
-        when(citizenRepo.findByAadhar("AUTO_TEST")).thenReturn(Optional.of(new Citizen()));
+        when(citizenRepo.findByAadharHash(anyString())).thenReturn(Optional.of(new Citizen()));
 
         UserAlreadyExistsException ex = assertThrows(UserAlreadyExistsException.class,
                 () -> userService.registerUser(req));
@@ -222,7 +220,6 @@ class UserServiceImplTest {
         req.setAadhar("AUTO_TEST");
         req.setName("Test User");
         req.setLanguagePreference("en");
-        req.setRole(Role.USER);
 
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("status", "VERIFIED");

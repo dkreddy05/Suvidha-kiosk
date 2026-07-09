@@ -13,7 +13,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-@Converter(autoApply = true)
+@Converter(autoApply = false)
 public class PhoneNumberEncryptionConverter implements AttributeConverter<String, String> {
 
     private static final Logger log = LoggerFactory.getLogger(PhoneNumberEncryptionConverter.class);

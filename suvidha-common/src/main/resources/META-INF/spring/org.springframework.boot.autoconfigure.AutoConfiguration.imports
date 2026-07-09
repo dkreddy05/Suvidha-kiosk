@@ -1,2 +1,1 @@
-com.suvidha.common.config.SuvidhaLoggingAutoConfiguration
-com.suvidha.common.config.SuvidhaReactiveLoggingAutoConfiguration
+com.suvidha.common.security.JwtAuthAutoConfiguration

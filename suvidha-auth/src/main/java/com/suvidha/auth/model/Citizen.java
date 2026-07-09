@@ -20,9 +20,13 @@ public class Citizen {
     private String id;
     @Column(nullable = false)
     private String mobile;
+    @Column(name = "aadhar_hash", unique = true, nullable = false, length = 64)
+    private String aadharHash;
+
     @Convert(converter = AadharEncryptionConverter.class)
-    @Column(unique = true)
+    @Column(name = "aadhar", nullable = false)
     private String aadhar;
+
     private String name;
     private String languagePreference;
 
@@ -46,6 +50,14 @@ public class Citizen {
         this.languagePreference = languagePreference;
         this.role = role;
         this.createdAt = createdAt;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void computeAadharHash() {
+        if (this.aadhar != null) {
+            this.aadharHash = AadharEncryptionConverter.generateAadharHash(this.aadhar);
+        }
     }
 
     public String getId() {

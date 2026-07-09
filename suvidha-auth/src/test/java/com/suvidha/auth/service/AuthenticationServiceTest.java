@@ -17,8 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,9 +31,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
-
-    @Mock
-    private BCryptPasswordEncoder encoder;
 
     @Mock
     private StringRedisTemplate redisTemplate;
@@ -50,9 +49,19 @@ class AuthenticationServiceTest {
 
     private AuthenticationServiceImpl authenticationService;
 
+    private String hashOtp(String otp) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(("otp:" + otp).getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @BeforeEach
     void setUp() {
-        authenticationService = new AuthenticationServiceImpl(encoder, redisTemplate, citizenRepo, jwtToken);
+        authenticationService = new AuthenticationServiceImpl(redisTemplate, citizenRepo, jwtToken);
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         lenient().when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     }
@@ -118,11 +127,10 @@ class AuthenticationServiceTest {
     void verifyOtp_shouldThrowWhenOtpIncorrect() {
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("mobile", "9876543210");
-        sessionData.put("otp", "$2a$10$hashedOtp");
+        sessionData.put("otp", hashOtp("123456"));
         sessionData.put("attempts", "0");
 
         when(hashOperations.entries(anyString())).thenReturn(sessionData);
-        when(encoder.matches(eq("999999"), eq("$2a$10$hashedOtp"))).thenReturn(false);
 
         assertThrows(OtpIncorrectException.class,
                 () -> authenticationService.verifyOtp("session-id", "999999"));
@@ -133,11 +141,10 @@ class AuthenticationServiceTest {
     void verifyOtp_shouldSucceedWithCorrectOtp() {
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("mobile", "9876543210");
-        sessionData.put("otp", "$2a$10$hashedOtp");
+        sessionData.put("otp", hashOtp("123456"));
         sessionData.put("attempts", "0");
 
         when(hashOperations.entries(eq("otp:session-id"))).thenReturn(sessionData);
-        when(encoder.matches(eq("123456"), eq("$2a$10$hashedOtp"))).thenReturn(true);
         when(citizenRepo.findByMobile("9876543210")).thenReturn(java.util.Optional.empty());
         when(jwtToken.generateToken(anyString(), anyString(), anyString(), anyString())).thenReturn("jwt-token");
 
@@ -155,11 +162,10 @@ class AuthenticationServiceTest {
     void verifyOtp_shouldIncludeUserRoleForNewCitizen() {
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("mobile", "9876543210");
-        sessionData.put("otp", "$2a$10$hashedOtp");
+        sessionData.put("otp", hashOtp("123456"));
         sessionData.put("attempts", "0");
 
         when(hashOperations.entries(eq("otp:session-id"))).thenReturn(sessionData);
-        when(encoder.matches(eq("123456"), eq("$2a$10$hashedOtp"))).thenReturn(true);
         when(citizenRepo.findByMobile("9876543210")).thenReturn(java.util.Optional.empty());
         when(jwtToken.generateToken(anyString(), anyString(), anyString(), anyString())).thenReturn("jwt-token");
 
@@ -178,7 +184,7 @@ class AuthenticationServiceTest {
     void verifyOtp_shouldIncludeCitizenRoleForReturningUser() {
         Map<Object, Object> sessionData = new HashMap<>();
         sessionData.put("mobile", "9876543210");
-        sessionData.put("otp", "$2a$10$hashedOtp");
+        sessionData.put("otp", hashOtp("123456"));
         sessionData.put("attempts", "0");
 
         com.suvidha.auth.model.Citizen citizen = new com.suvidha.auth.model.Citizen();
@@ -188,7 +194,6 @@ class AuthenticationServiceTest {
         citizen.setRole(com.suvidha.auth.Dto.Role.ADMIN);
 
         when(hashOperations.entries(eq("otp:session-id"))).thenReturn(sessionData);
-        when(encoder.matches(eq("123456"), eq("$2a$10$hashedOtp"))).thenReturn(true);
         when(citizenRepo.findByMobile("9876543210")).thenReturn(java.util.Optional.of(citizen));
         when(jwtToken.generateToken(anyString(), anyString(), anyString(), anyString())).thenReturn("jwt-token");
 

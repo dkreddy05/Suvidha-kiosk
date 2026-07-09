@@ -7,6 +7,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -82,6 +83,29 @@ public class AadharEncryptionConverter implements AttributeConverter<String, Str
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Aadhaar decryption failed", e);
+        }
+    }
+
+    public static String generateAadharHash(String plainTextAadhar) {
+        String key = System.getProperty("AADHAR_BLIND_INDEX_KEY");
+        if (key == null || key.isBlank()) {
+            key = System.getenv("AADHAR_BLIND_INDEX_KEY");
+        }
+        return generateAadharHash(plainTextAadhar, key);
+    }
+
+    public static String generateAadharHash(String plainTextAadhar, String pepper) {
+        if (plainTextAadhar == null) return null;
+        if (pepper == null || pepper.isBlank()) {
+            throw new IllegalStateException("AADHAR_BLIND_INDEX_KEY environment variable is not set.");
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] input = (plainTextAadhar + pepper).getBytes(StandardCharsets.UTF_8);
+            byte[] hash = digest.digest(input);
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Aadhaar hash generation failed", e);
         }
     }
 }

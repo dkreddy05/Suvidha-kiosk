@@ -2,6 +2,9 @@ import axios from 'axios';
 import { useAuthStore } from '@/store/auth.store';
 import { API_BASE_URL } from '@/lib/constants';
 
+// Tokens are managed as HttpOnly cookies — the browser sends them automatically
+// on every request. No manual Authorization header injection needed.
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30_000,
@@ -9,9 +12,10 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  // Attach the in-memory access token as a Bearer token for gateway requests.
   const token = useAuthStore.getState().accessToken;
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
 
   // Kiosk Mode support (Attach X-Kiosk-Id if configured)
@@ -29,16 +33,16 @@ apiClient.interceptors.request.use((config) => {
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: () => void;
   reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
-    } else if (token) {
-      prom.resolve(token);
+    } else {
+      prom.resolve();
     }
   });
   failedQueue = [];
@@ -51,13 +55,10 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
+          .then(() => apiClient(originalRequest))
           .catch((err) => Promise.reject(err));
       }
 
@@ -65,25 +66,31 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (!refreshToken) {
-          useAuthStore.getState().logout();
-          throw new Error('No refresh token available');
+        // Send the stored refresh token in the body for cross-origin gateway call.
+        const storedRefreshToken = useAuthStore.getState().refreshToken;
+        const refreshRes = await axios.post(
+          `${API_BASE_URL}/auth/refresh-token`,
+          storedRefreshToken ? { refresh_token: storedRefreshToken } : {},
+          { withCredentials: true }
+        );
+
+        // Store the new tokens in the store so the interceptor picks them up.
+        const newAccessToken = refreshRes.data?.accessToken;
+        const newRefreshToken = refreshRes.data?.refreshToken;
+        if (newAccessToken) {
+          useAuthStore.getState().setTokens(newAccessToken, newRefreshToken ?? '');
+          // Also persist as session cookie via the BFF
+          await fetch('/api/auth/set-cookie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken: newAccessToken, action: 'set' }),
+          });
         }
 
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-        useAuthStore.getState().setTokens(accessToken, newRefreshToken);
-        processQueue(null, accessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        processQueue(null);
         return apiClient(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
+        processQueue(refreshError);
         useAuthStore.getState().logout();
         return Promise.reject(refreshError);
       } finally {

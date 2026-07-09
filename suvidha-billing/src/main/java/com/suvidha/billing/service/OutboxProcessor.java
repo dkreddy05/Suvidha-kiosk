@@ -8,11 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,7 +27,6 @@ public class OutboxProcessor {
     private final OutboxEventRepository outboxEventRepository;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-    private final BCryptPasswordEncoder passwordEncoder;
 
     public OutboxProcessor(OutboxEventRepository outboxEventRepository,
                           StringRedisTemplate redisTemplate,
@@ -33,10 +34,9 @@ public class OutboxProcessor {
         this.outboxEventRepository = outboxEventRepository;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
-        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
-    @Scheduled(fixedDelayString = "${outbox.poll-interval-ms:300000}", initialDelayString = "${outbox.initial-delay-ms:5000}")
+    @Scheduled(fixedDelayString = "${outbox.poll-interval-ms:500}", initialDelayString = "${outbox.initial-delay-ms:5000}")
     @Transactional
     public void processOutboxEvents() {
         try {
@@ -85,7 +85,8 @@ public class OutboxProcessor {
         String otp = payload.get("otp");
         Duration ttl = Duration.ofMinutes(5);
 
-        String hash = passwordEncoder.encode(otp);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        String hash = Base64.getEncoder().encodeToString(digest.digest(otp.getBytes(StandardCharsets.UTF_8)));
         redisTemplate.opsForValue().set("link_otp:" + mobile, hash, ttl);
         redisTemplate.opsForValue().set("link_cooldown:" + mobile, "1", Duration.ofMinutes(2));
 

@@ -55,7 +55,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.get("lang")).thenReturn("en");
         when(claims.getId()).thenReturn("test-jti");
 
-        when(jwtToken.validate(anyString())).thenReturn(claims);
+        when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));
         when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
@@ -89,7 +89,7 @@ class JwtClaimsToHeadersFilterTest {
         when(claims.get("lang")).thenReturn(null);
         when(claims.getId()).thenReturn("test-jti");
 
-        when(jwtToken.validate(anyString())).thenReturn(claims);
+        when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));
         when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
@@ -123,7 +123,7 @@ class JwtClaimsToHeadersFilterTest {
             Claims claims = mock(Claims.class);
             when(claims.getId()).thenReturn("blacklisted-jti");
 
-            when(jwtToken.validate(anyString())).thenReturn(claims);
+            when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));
             when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(true));
 
             MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
@@ -131,8 +131,10 @@ class JwtClaimsToHeadersFilterTest {
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-            assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                    () -> filter.filter(exchange, chain).block());
+            filter.filter(exchange, chain).block();
+
+            assertEquals(org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    exchange.getResponse().getStatusCode());
         }
 
         @Test
@@ -143,15 +145,15 @@ class JwtClaimsToHeadersFilterTest {
             when(claims.get("citizenId")).thenReturn("citizen-1");
             when(claims.getId()).thenReturn("valid-jti");
 
-            when(jwtToken.validate(anyString())).thenReturn(claims);
-            when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
+        when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));
+        when(jwtToken.isBlacklisted(anyString())).thenReturn(Mono.just(false));
 
-            MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer valid.token.here")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-            filter.filter(exchange, chain).block();
+        filter.filter(exchange, chain).block();
 
             verify(chain).filter(any(ServerWebExchange.class));
         }

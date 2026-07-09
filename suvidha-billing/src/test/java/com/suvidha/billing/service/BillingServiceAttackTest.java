@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -87,6 +88,7 @@ class BillingServiceAttackTest {
     void setUp() {
         legacyService = new BillingFacadeServiceImpl(accountRepo, billRepo, txnRepo, idempotencyService);
         specService = new BillingSpecServiceImpl(accountRepo, billRepo, txnRepo, objectMapper);
+        lenient().when(txnRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
     }
 
     // ─── Helper factories ───────────────────────────────────────────────────
@@ -154,7 +156,7 @@ class BillingServiceAttackTest {
             when(idempotencyService.getCachedResponse("idem-1")).thenReturn(Optional.empty());
             when(txnRepo.findAllByRazorpayOrderIdForUpdate(orderId)).thenReturn(List.of(tx));
             when(billRepo.findById(BILL_ID)).thenReturn(Optional.of(bill));
-            when(txnRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(txnRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
             when(billRepo.save(any())).thenAnswer(i -> i.getArgument(0));
 
             PaymentConfirmDTO first = legacyService.confirmPayment(req, "idem-1", CITIZEN_A);
@@ -177,7 +179,7 @@ class BillingServiceAttackTest {
             assertThat(second.getPaymentId()).isEqualTo("pay_first");
             assertThat(second.getPaymentId()).isNotEqualTo("pay_second");
 
-            verify(txnRepo, times(1)).save(any());
+            verify(txnRepo, times(1)).saveAll(anyList());
             verify(billRepo, times(1)).save(any());
         }
 
@@ -200,7 +202,7 @@ class BillingServiceAttackTest {
 
             assertThat(result.getPaymentId()).isEqualTo("pay_original");
             assertThat(result.getPaymentId()).isNotEqualTo("pay_attacker");
-            verify(txnRepo, never()).save(any());
+            verify(txnRepo, never()).saveAll(anyList());
         }
 
         @Test
@@ -246,11 +248,12 @@ class BillingServiceAttackTest {
             when(idempotencyService.getCachedResponse(any())).thenReturn(Optional.empty());
             when(txnRepo.findAllByRazorpayOrderIdForUpdate(orderId)).thenReturn(List.of(tx));
             when(billRepo.findById(BILL_ID)).thenReturn(Optional.of(bill));
-            when(txnRepo.save(any())).thenAnswer(invocation -> {
+            when(txnRepo.saveAll(anyList())).thenAnswer(invocation -> {
                 saveCount.incrementAndGet();
-                Transaction t = invocation.getArgument(0);
+                List<Transaction> txs = invocation.getArgument(0);
+                Transaction t = txs.get(0);
                 winningPaymentId.compareAndSet(null, t.getRazorpayPaymentId());
-                return t;
+                return txs;
             });
             when(billRepo.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -796,7 +799,6 @@ class BillingServiceAttackTest {
             when(idempotencyService.getCachedResponse(any())).thenReturn(Optional.empty());
             when(txnRepo.findAllByRazorpayOrderIdForUpdate(orderId)).thenReturn(List.of(tx));
             when(billRepo.findById(BILL_ID)).thenReturn(Optional.of(bill));
-            when(txnRepo.save(any())).thenAnswer(i -> i.getArgument(0));
             when(billRepo.save(any())).thenThrow(new OptimisticLockingFailureException("version conflict"));
 
             ConfirmPaymentRequest req = new ConfirmPaymentRequest();
@@ -1157,7 +1159,7 @@ class BillingServiceAttackTest {
 
             when(txnRepo.findAllByRazorpayOrderIdForUpdate(orderId)).thenReturn(List.of(tx));
             when(billRepo.findById(BILL_ID)).thenReturn(Optional.of(bill));
-            when(txnRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(txnRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
             when(billRepo.save(any())).thenAnswer(i -> i.getArgument(0));
 
             String idemKey = "idem-rapid-fire";
@@ -1187,7 +1189,7 @@ class BillingServiceAttackTest {
                 assertThat(result.getPaymentId()).isEqualTo("pay_rapid");
             }
 
-            verify(txnRepo, times(1)).save(any());
+            verify(txnRepo, times(1)).saveAll(anyList());
             verify(billRepo, times(1)).save(any());
         }
     }

@@ -225,7 +225,7 @@ export default function BillingPage() {
             title="No accounts linked"
             description="Link your first utility account to start paying bills online."
             actionLabel="Link Your First Account"
-            onAction={() => router.push("/billing/link")}
+            onAction={() => router.push("/connections/link")}
           />
         </div>
       </div>
@@ -260,7 +260,7 @@ export default function BillingPage() {
             );
           })}
 
-          <Link href="/billing/link">
+          <Link href="/connections/link">
             <motion.div
               variants={itemVariants}
               className="flex h-full min-h-[180px] items-center justify-center rounded-xl border-2 border-dashed border-border bg-white dark:bg-surface-dark p-6 transition-all duration-200 hover:border-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-900/10 group cursor-pointer"

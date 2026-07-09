@@ -63,15 +63,6 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
         if (!rateLimitEnabled) return chain.filter(exchange);
 
         String path = exchange.getRequest().getURI().getPath();
-
-        if (path.startsWith("/api/auth/send-otp") || path.startsWith("/api/v1/auth/send-otp")) {
-            return applyRateLimit(exchange, chain, unauthenticatedRateLimiter, "send-otp");
-        }
-
-        if (path.startsWith("/api/auth/") || path.startsWith("/api/v1/auth/")) {
-            return chain.filter(exchange);
-        }
-
         boolean hasToken = exchange.getRequest().getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION) != null;
         RedisRateLimiter limiter = hasToken ? authenticatedRateLimiter : unauthenticatedRateLimiter;
@@ -88,38 +79,6 @@ public class RateLimitingFilter implements GlobalFilter, Ordered {
                 })
                 .onErrorResume(RateLimiterUnreachableException.class, throwable -> {
                     log.error("Redis unreachable — failing closed for rate limiter: {}", throwable.getCause().getMessage());
-                    exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-                    exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                    Map<String, Object> body = Map.of(
-                            "status", 503,
-                            "error", "Service Unavailable",
-                            "message", "Rate limiting service unavailable. Please try again later."
-                    );
-                    try {
-                        byte[] bytes = objectMapper.writeValueAsBytes(body);
-                        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
-                        return exchange.getResponse().writeWith(Mono.just(buffer));
-                    } catch (JsonProcessingException e) {
-                        return Mono.error(e);
-                    }
-                })
-        );
-    }
-
-    private Mono<Void> applyRateLimit(ServerWebExchange exchange, GatewayFilterChain chain,
-                                       RedisRateLimiter limiter, String label) {
-        return keyResolver.resolve(exchange).flatMap(key ->
-            limiter.isAllowed(label, key)
-                .onErrorMap(throwable -> new RateLimiterUnreachableException(throwable))
-                .flatMap(response -> {
-                    if (response.isAllowed()) {
-                        return chain.filter(exchange);
-                    } else {
-                        return handleRateLimitExceeded(exchange, response, key, label);
-                    }
-                })
-                .onErrorResume(RateLimiterUnreachableException.class, throwable -> {
-                    log.error("Redis unreachable — failing closed for rate limiter on {}: {}", label, throwable.getCause().getMessage());
                     exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
                     exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
                     Map<String, Object> body = Map.of(

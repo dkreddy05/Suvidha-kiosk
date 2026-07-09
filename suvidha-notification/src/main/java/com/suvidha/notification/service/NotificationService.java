@@ -24,14 +24,14 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
-    private final SmsStubService smsStubService;
+    private final SmsSender smsSender;
     private final RateLimiterService rateLimiterService;
 
     public NotificationService(NotificationRepository notificationRepository,
-                                SmsStubService smsStubService,
+                                SmsSender smsSender,
                                 RateLimiterService rateLimiterService) {
         this.notificationRepository = notificationRepository;
-        this.smsStubService = smsStubService;
+        this.smsSender = smsSender;
         this.rateLimiterService = rateLimiterService;
     }
 
@@ -50,7 +50,7 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
 
         try {
-            smsStubService.sendSms(request.getPhoneNumber(), "Your OTP code is: ****");
+            smsSender.sendSms(request.getPhoneNumber(), "Your OTP code is: ****");
             notification.setStatus(NotificationStatus.SENT);
             notification.setSentAt(Instant.now());
         } catch (Exception e) {

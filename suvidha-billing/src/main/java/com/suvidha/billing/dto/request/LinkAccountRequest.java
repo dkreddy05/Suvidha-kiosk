@@ -20,11 +20,9 @@ public class LinkAccountRequest {
     @Size(max = 32, message = "utilityType too long")
     private String utilityType;   // ELECTRICITY | GAS | WATER
 
-    @NotBlank(message = "providerName is required")
     @Size(max = 128, message = "providerName too long")
     private String providerName;
 
-    @NotBlank(message = "address is required")
     @Size(max = 512, message = "address too long")
     private String address;
 }

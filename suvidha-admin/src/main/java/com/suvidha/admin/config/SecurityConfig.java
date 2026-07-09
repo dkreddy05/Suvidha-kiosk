@@ -2,6 +2,7 @@ package com.suvidha.admin.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.suvidha.admin.security.JwtAuthenticationFilter;
+import com.suvidha.admin.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +29,13 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
+    public JwtAuthenticationFilter adminJwtAuthenticationFilter(JwtUtil jwtUtil) {
+        return new JwtAuthenticationFilter(jwtUtil);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter adminJwtAuthenticationFilter)
             throws Exception {
         http.csrf(csrf -> csrf.disable());
         http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -39,7 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**", "/api/v1/admin/**").authenticated()
                 .anyRequest().authenticated());
 
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(adminJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.exceptionHandling(ex -> ex
                 .authenticationEntryPoint(authenticationEntryPoint())

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Zap, Droplets, Flame, ArrowLeft, Loader2 } from "lucide-react";
+import { Zap, Droplets, Flame, Loader2 } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@suvidha/ui";
 import { useLinkAccount } from "@/hooks/billing/useAccounts";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -63,7 +63,7 @@ export default function LinkAccountPage() {
         title="Link Utility Account"
         description="Add a new utility account to track your bills and payments"
         breadcrumbs={[
-          { label: "Billing", href: "/billing" },
+          { label: "Connections", href: "/connections" },
           { label: "Link Account" },
         ]}
       />
@@ -134,7 +134,7 @@ export default function LinkAccountPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
-                <Link href="/billing">
+                <Link href="/connections">
                   <Button type="button" variant="outline">
                     Cancel
                   </Button>

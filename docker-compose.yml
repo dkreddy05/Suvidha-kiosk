@@ -56,7 +56,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Auth Service (port 8081)
+  #  Auth Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-auth:
     build:
@@ -64,12 +64,10 @@ services:
       dockerfile: suvidha-auth/Dockerfile
     container_name: suvidha-auth
     restart: unless-stopped
-    ports:
-      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: auth_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
@@ -77,6 +75,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-not-used-rsa-only}
       AADHAR_ENCRYPTION_KEY: ${AADHAR_ENCRYPTION_KEY:-change-me-to-32-byte-aes-key!!!!}
+      AADHAR_BLIND_INDEX_KEY: ${AADHAR_BLIND_INDEX_KEY:-suvidha-dev-blind-index-pepper-32b}
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SERVER_PORT: 8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
@@ -97,7 +96,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Billing Service (port 8082)
+  #  Billing Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-billing:
     build:
@@ -105,12 +104,10 @@ services:
       dockerfile: suvidha-billing/Dockerfile
     container_name: suvidha-billing
     restart: unless-stopped
-    ports:
-      - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/billing_db
+      SPRING_DATASOURCE_USERNAME: billing_user
+      SPRING_DATASOURCE_PASSWORD: billing_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
@@ -134,7 +131,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Grievance Service (port 8083)
+  #  Grievance Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-grievance:
     build:
@@ -142,12 +139,10 @@ services:
       dockerfile: suvidha-grievance/Dockerfile
     container_name: suvidha-grievance
     restart: unless-stopped
-    ports:
-      - "8083:8083"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/grievance_db
+      SPRING_DATASOURCE_USERNAME: grievance_user
+      SPRING_DATASOURCE_PASSWORD: grievance_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
@@ -168,7 +163,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Connections Service (port 8084)
+  #  Connections Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-connections:
     build:
@@ -176,18 +171,17 @@ services:
       dockerfile: suvidha-connections/Dockerfile
     container_name: suvidha-connections
     restart: unless-stopped
-    ports:
-      - "8084:8084"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/connections_db
+      SPRING_DATASOURCE_USERNAME: connections_user
+      SPRING_DATASOURCE_PASSWORD: connections_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
       SERVER_PORT: 8084
 
       AUTH_SERVICE_URL: http://suvidha-auth:8081
+      BILLING_SERVICE_URL: http://suvidha-billing:8082
       JAVA_TOOL_OPTIONS: "-Xmx384m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
@@ -202,7 +196,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Notification Service (port 8085)
+  #  Notification Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-notification:
     build:
@@ -210,12 +204,10 @@ services:
       dockerfile: suvidha-notification/Dockerfile
     container_name: suvidha-notification
     restart: unless-stopped
-    ports:
-      - "8085:8085"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: notification_user
+      SPRING_DATASOURCE_PASSWORD: notification_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
@@ -240,7 +232,7 @@ services:
       - suvidha-net
 
   # -----------------------------------------------------------
-  #  Admin Service (port 8086)
+  #  Admin Service (no host port — accessed through gateway)
   # -----------------------------------------------------------
   suvidha-admin:
     build:
@@ -248,12 +240,10 @@ services:
       dockerfile: suvidha-admin/Dockerfile
     container_name: suvidha-admin
     restart: unless-stopped
-    ports:
-      - "8086:8086"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analytics_db
+      SPRING_DATASOURCE_USERNAME: admin_user
+      SPRING_DATASOURCE_PASSWORD: admin_pass
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: 5
       SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: 20
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
@@ -289,9 +279,9 @@ services:
       - "8080:8080"
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/suvidha_auth_db
-      SPRING_DATASOURCE_USERNAME: suvidha
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-suvidha_pass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: auth_pass
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       AUTH_SERVICE_URL: http://suvidha-auth:8081
@@ -341,6 +331,7 @@ services:
       - "3000:3000"
     environment:
       VITE_API_BASE_URL: /
+      GATEWAY_URL: http://suvidha-gateway:8080
     depends_on:
       - suvidha-gateway
     networks:

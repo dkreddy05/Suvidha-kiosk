@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.suvidha.auth.Dto.OtpRequest;
 import com.suvidha.auth.Dto.VerifyOtpRequest;
 import com.suvidha.auth.Dto.RegisterRequest;
-import com.suvidha.auth.Dto.Role;
 import com.suvidha.auth.Dto.UserAuthDto;
 import com.suvidha.auth.Dto.VerifyOtpResponse;
 import com.suvidha.auth.model.RefreshToken;
@@ -25,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import org.springframework.web.client.RestTemplate;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -61,6 +61,9 @@ class AuthControllerTest {
 
     @MockBean
     private com.suvidha.auth.service.AuditService auditService;
+
+    @MockBean
+    private RestTemplate restTemplate;
 
     @Test
     @DisplayName("POST /api/auth/send-otp should return 400 for invalid mobile")
@@ -100,25 +103,19 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/register should pass role to generateToken")
-    void register_shouldPassRoleToGenerateToken() throws Exception {
+    @DisplayName("POST /api/auth/register always creates USER role regardless of request")
+    void register_alwaysCreatesUserRole() throws Exception {
         UserAuthDto userDto = new UserAuthDto();
         userDto.setId("citizen-uuid");
         userDto.setMobile("9876543210");
         userDto.setName("Test User");
-        userDto.setRole("ADMIN");
-        userDto.setLanguagePreference("en");
+        userDto.setRole("USER");
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setId("rt-id");
-        refreshToken.setCitizenId("citizen-uuid");
-        refreshToken.setToken("refresh-token-value");
-        refreshToken.setExpiresAt(Instant.now().plusSeconds(604800));
-        refreshToken.setCreatedAt(Instant.now());
-        refreshToken.setRevoked(false);
+        refreshToken.setToken("refresh-jwt-token");
 
         when(userService.registerUser(any(RegisterRequest.class))).thenReturn(userDto);
-        when(jwtToken.generateToken(eq("citizen-uuid"), eq("9876543210"), eq("Test User"), eq("ADMIN")))
+        when(jwtToken.generateToken(eq("citizen-uuid"), eq("9876543210"), eq("Test User"), eq("USER")))
                 .thenReturn("access-jwt-token");
         when(refreshTokenService.createRefreshToken("citizen-uuid")).thenReturn(refreshToken);
 
@@ -128,7 +125,6 @@ class AuthControllerTest {
         request.setAadhar("123456789012");
         request.setName("Test User");
         request.setLanguagePreference("en");
-        request.setRole(Role.ADMIN);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +132,7 @@ class AuthControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.accessToken").value("access-jwt-token"));
 
-        verify(jwtToken).generateToken("citizen-uuid", "9876543210", "Test User", "ADMIN");
+        verify(jwtToken).generateToken("citizen-uuid", "9876543210", "Test User", "USER");
     }
 
     @Test

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
@@ -44,6 +45,7 @@ class GatewayJwtAttackTest {
     private PublicKey publicKey;
     private String kid;
     private String validToken;
+    private String jti;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -58,14 +60,16 @@ class GatewayJwtAttackTest {
                 "http://localhost:8081/api/auth/public-key",
                 "suvidha-auth",
                 "suvidha-services",
-                reactiveRedisTemplate
+                reactiveRedisTemplate,
+                WebClient.builder()
         );
 
         injectPublicKey(gatewayJwtToken, kid, publicKey);
 
+        jti = UUID.randomUUID().toString();
         validToken = Jwts.builder()
                 .header().keyId(kid).and()
-                .id(UUID.randomUUID().toString())
+                .id(jti)
                 .subject("citizen-1")
                 .issuer("suvidha-auth")
                 .audience().add("suvidha-services").and()
@@ -101,7 +105,7 @@ class GatewayJwtAttackTest {
             when(reactiveRedisTemplate.hasKey(anyString()))
                     .thenReturn(Mono.error(new RuntimeException("Redis connection refused")));
 
-            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(validToken);
+            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(jti);
             assertTrue(result.block());
         }
 
@@ -111,7 +115,7 @@ class GatewayJwtAttackTest {
             when(reactiveRedisTemplate.hasKey(anyString()))
                     .thenReturn(Mono.error(new java.util.concurrent.TimeoutException("Redis timeout")));
 
-            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(validToken);
+            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(jti);
             assertTrue(result.block());
         }
 
@@ -120,7 +124,7 @@ class GatewayJwtAttackTest {
         void redisHealthy_blacklistedTokenBlocked() {
             when(reactiveRedisTemplate.hasKey(anyString())).thenReturn(Mono.just(true));
 
-            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(validToken);
+            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(jti);
             assertTrue(result.block());
         }
 
@@ -129,7 +133,7 @@ class GatewayJwtAttackTest {
         void redisHealthy_tokenNotBlacklisted() {
             when(reactiveRedisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
 
-            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(validToken);
+            Mono<Boolean> result = gatewayJwtToken.isBlacklisted(jti);
             assertFalse(result.block());
         }
     }

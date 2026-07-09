@@ -3,13 +3,15 @@ package com.suvidha.auth.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.suvidha.auth.service.AuthenticationService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 import com.suvidha.auth.Dto.VerifyOtpResponse;
 import com.suvidha.auth.model.Citizen;
 import com.suvidha.auth.exception.InvalidRequestException;
@@ -26,7 +28,6 @@ import com.suvidha.auth.repo.CitizenRepo;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
-    private BCryptPasswordEncoder encoder;
     private StringRedisTemplate template;
     private CitizenRepo citizenRepo;
     private final SecureRandom secureRandom;
@@ -38,13 +39,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private static final Duration OTP_TTL = Duration.ofMinutes(5);
     private static final Duration VERIFIED_SESSION_TTL = Duration.ofMinutes(10);
 
-    public AuthenticationServiceImpl(BCryptPasswordEncoder encoder, StringRedisTemplate template,
+    public AuthenticationServiceImpl(StringRedisTemplate template,
             CitizenRepo citizenRepo, JwtToken jwtToken) {
-        this.encoder = encoder;
         this.template = template;
         this.citizenRepo = citizenRepo;
         this.secureRandom = new SecureRandom();
         this.jwtToken = jwtToken;
+    }
+
+    private String hashOtp(String otp) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // Use a static salt; OTPs are short-lived (5 min) and max 5 attempts
+            byte[] hash = digest.digest(("otp:" + otp).getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("OTP hashing failed", e);
+        }
     }
 
     @Override
@@ -71,7 +82,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
             String otp = String.format("%06d", secureRandom.nextInt(900000) + 100000);
-            String hashedOtp = encoder.encode(otp);
+            String hashedOtp = hashOtp(otp);
 
             String key = OTP_PREFIX + ":" + sessionId;
 
@@ -126,7 +137,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new OtpSessionInvalidException("Invalid or expired OTP session.");
             }
 
-            if (!encoder.matches(otp, storedOtp)) {
+            if (!hashOtp(otp).equals(storedOtp)) {
                 attempts++;
                 template.opsForHash().put(otpKey, "attempts", String.valueOf(attempts));
                 if (attempts >= MAX_ATTEMPTS) {

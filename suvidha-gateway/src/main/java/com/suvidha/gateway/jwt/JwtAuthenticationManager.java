@@ -23,27 +23,26 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
             return Mono.error(new BadCredentialsException("Missing JWT"));
         }
 
-        try {
-            Claims claims = jwtToken.validate(token);
-            String mobile = claims.getSubject();
-            if (mobile == null || mobile.isBlank()) {
-                return Mono.error(new BadCredentialsException("JWT subject missing"));
-            }
+        return jwtToken.validateAsync(token)
+                .flatMap(claims -> {
+                    String mobile = claims.getSubject();
+                    if (mobile == null || mobile.isBlank()) {
+                        return Mono.<Authentication>error(new BadCredentialsException("JWT subject missing"));
+                    }
 
-            String role = claims.get("role", String.class);
-            var authorities = role != null 
-                ? AuthorityUtils.createAuthorityList("ROLE_" + role) 
-                : AuthorityUtils.NO_AUTHORITIES;
+                    String role = claims.get("role", String.class);
+                    var authorities = role != null 
+                        ? AuthorityUtils.createAuthorityList("ROLE_" + role) 
+                        : AuthorityUtils.NO_AUTHORITIES;
 
-            UsernamePasswordAuthenticationToken authed = new UsernamePasswordAuthenticationToken(
-                    mobile,
-                    token,
-                    authorities
-            );
-            authed.setDetails(claims);
-            return Mono.just(authed);
-        } catch (Exception e) {
-            return Mono.error(new BadCredentialsException("Invalid JWT", e));
-        }
+                    UsernamePasswordAuthenticationToken authed = new UsernamePasswordAuthenticationToken(
+                            mobile,
+                            token,
+                            authorities
+                    );
+                    authed.setDetails(claims);
+                    return Mono.just(authed);
+                })
+                .onErrorMap(e -> new BadCredentialsException("Invalid JWT", e));
     }
 }

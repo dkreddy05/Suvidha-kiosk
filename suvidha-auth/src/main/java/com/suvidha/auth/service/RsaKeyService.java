@@ -17,7 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
-import jakarta.annotation.PostConstruct;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 @Service
@@ -29,8 +29,8 @@ public class RsaKeyService {
         this.jwtKeyVersionRepo = jwtKeyVersionRepo;
     }
 
-    @PostConstruct
-    public void initializeKeys() {
+    @Scheduled(fixedDelay = 3600000)
+    public void rotateKeys() {
         if (jwtKeyVersionRepo.count() == 0) {
             log.info("No RSA keys found. Generating initial key pair...");
             generateNewKey();
@@ -54,7 +54,7 @@ public class RsaKeyService {
     public JwtKeyVersion generateNewKey() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(4096);
+            keyGen.initialize(2048);
             KeyPair pair = keyGen.generateKeyPair();
 
             String publicKeyStr = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());

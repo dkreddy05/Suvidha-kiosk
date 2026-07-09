@@ -1,0 +1,1 @@
+ALTER TABLE connection_request ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;
