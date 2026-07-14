@@ -140,27 +140,13 @@ class ConnectionRequestServiceTest {
     class UpdateStatusOwnership {
 
         @Test
-        @DisplayName("admin can move request to UNDER_REVIEW")
-        void adminCanMoveToUnderReview() {
+        @DisplayName("owner can cancel their own connection request")
+        void ownerCanCancelOwnRequest() {
             ConnectionRequest req = aSubmittedRequest();
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
             when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-            var update = new ConnectionStatusUpdateRequest("UNDER_REVIEW", "processing");
-            ConnectionStatusResponse response = service.updateStatus(DISPLAY_ID, "admin-1", true, update);
-
-            assertNotNull(response);
-            assertEquals("UNDER_REVIEW", response.status());
-        }
-
-        @Test
-        @DisplayName("citizen can CANCEL their own request")
-        void citizenCanCancelOwnRequest() {
-            ConnectionRequest req = aSubmittedRequest();
-            when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
-            when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
-
-            var update = new ConnectionStatusUpdateRequest("CANCELLED", "changed my mind");
+            var update = new ConnectionStatusUpdateRequest("CANCELLED", "cancelling");
             ConnectionStatusResponse response = service.updateStatus(DISPLAY_ID, CITIZEN_A, false, update);
 
             assertNotNull(response);
@@ -168,21 +154,35 @@ class ConnectionRequestServiceTest {
         }
 
         @Test
-        @DisplayName("citizen cannot make admin-only transitions (UNDER_REVIEW) — gets FORBIDDEN")
-        void citizenCannotMakeAdminTransitions() {
+        @DisplayName("owner cannot update status to non-CANCELLED state")
+        void ownerCannotUpdateToNonCancelledState() {
             ConnectionRequest req = aSubmittedRequest();
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
 
+            var update = new ConnectionStatusUpdateRequest("UNDER_REVIEW", "processing");
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> service.updateStatus(DISPLAY_ID, CITIZEN_A, false,
-                            new ConnectionStatusUpdateRequest("UNDER_REVIEW", null)));
+                    () -> service.updateStatus(DISPLAY_ID, CITIZEN_A, false, update));
 
             assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
-            assertTrue(ex.getReason().contains("admins"));
+            assertTrue(ex.getReason().contains("Only admins can approve or reject requests"));
         }
 
         @Test
-        @DisplayName("non-owner non-admin cannot update another citizen's connection request")
+        @DisplayName("admin can update connection request status")
+        void adminCanUpdateStatus() {
+            ConnectionRequest req = aSubmittedRequest();
+            when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
+            when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            var update = new ConnectionStatusUpdateRequest("UNDER_REVIEW", "processing");
+            ConnectionStatusResponse response = service.updateStatus(DISPLAY_ID, CITIZEN_A, true, update);
+
+            assertNotNull(response);
+            assertEquals("UNDER_REVIEW", response.status());
+        }
+
+        @Test
+        @DisplayName("non-owner cannot update another citizen's connection request")
         void nonOwnerCannotUpdateOthersRequest() {
             ConnectionRequest req = aSubmittedRequest();
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
@@ -251,57 +251,55 @@ class ConnectionRequestServiceTest {
     class StatusTransitions {
 
         @Test
-        @DisplayName("admin: rejects invalid transition from SUBMITTED directly to APPROVED")
+        @DisplayName("rejects invalid transition from SUBMITTED directly to APPROVED")
         void rejectsInvalidTransition() {
             ConnectionRequest req = aSubmittedRequest();
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
 
-            // Admin passes auth check; transition logic (SUBMITTED->APPROVED) is invalid
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> service.updateStatus(DISPLAY_ID, "admin-1", true,
+                    () -> service.updateStatus(DISPLAY_ID, CITIZEN_A, true,
                             new ConnectionStatusUpdateRequest("APPROVED", null)));
 
             assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, ex.getStatusCode());
         }
 
         @Test
-        @DisplayName("admin: rejects update on terminal state APPROVED")
+        @DisplayName("rejects update on terminal state APPROVED")
         void rejectsUpdateOnTerminalState() {
             ConnectionRequest req = aSubmittedRequest();
             req.setStatus("APPROVED");
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
 
-            // Admin passes auth check; terminal-state guard fires
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> service.updateStatus(DISPLAY_ID, "admin-1", true,
+                    () -> service.updateStatus(DISPLAY_ID, CITIZEN_A, true,
                             new ConnectionStatusUpdateRequest("UNDER_REVIEW", null)));
 
             assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         }
 
         @Test
-        @DisplayName("admin: publishes ConnectionApprovedEvent on approval")
+        @DisplayName("publishes ConnectionApprovedEvent on approval")
         void publishesApprovedEvent() {
             ConnectionRequest req = aSubmittedRequest();
             req.setStatus("UNDER_REVIEW");
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
             when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-            service.updateStatus(DISPLAY_ID, "admin-1", true,
+            service.updateStatus(DISPLAY_ID, CITIZEN_A, true,
                     new ConnectionStatusUpdateRequest("APPROVED", "Approved"));
 
             verify(eventPublisher).publishEvent(any(ConnectionRequestService.ConnectionApprovedEvent.class));
         }
 
         @Test
-        @DisplayName("admin: publishes ConnectionRejectedEvent on rejection")
+        @DisplayName("publishes ConnectionRejectedEvent on rejection")
         void publishesRejectedEvent() {
             ConnectionRequest req = aSubmittedRequest();
             req.setStatus("UNDER_REVIEW");
             when(repository.findByDisplayId(DISPLAY_ID)).thenReturn(Optional.of(req));
             when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-            service.updateStatus(DISPLAY_ID, "admin-1", true,
+            service.updateStatus(DISPLAY_ID, CITIZEN_A, true,
                     new ConnectionStatusUpdateRequest("REJECTED", "Invalid docs"));
 
             verify(eventPublisher).publishEvent(any(ConnectionRequestService.ConnectionRejectedEvent.class));
