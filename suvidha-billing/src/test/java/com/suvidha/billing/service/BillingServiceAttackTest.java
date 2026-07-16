@@ -29,6 +29,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -84,12 +87,27 @@ class BillingServiceAttackTest {
     private static final String ACCT_ID = "acct-001";
     private static final UUID BILL_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final BigDecimal BILL_AMOUNT = new BigDecimal("1500.00");
+    private static final String TEST_RAZORPAY_SECRET = "test_secret_for_attack_tests";
+
+    /** Compute a valid HMAC-SHA256 signature for the given orderId|paymentId using the test secret. */
+    private static String computeSignature(String orderId, String paymentId) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(TEST_RAZORPAY_SECRET.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] hash = mac.doFinal((orderId + "|" + paymentId).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeEach
     void setUp() {
         legacyService = new BillingFacadeServiceImpl(accountRepo, billRepo, txnRepo, idempotencyService);
         // Inject a test secret so the fail-closed guard in verifyRazorpaySignature doesn't block tests
-        ReflectionTestUtils.setField(legacyService, "razorpaySecret", "test_secret_for_attack_tests");
+        ReflectionTestUtils.setField(legacyService, "razorpaySecret", TEST_RAZORPAY_SECRET);
         specService = new BillingSpecServiceImpl(accountRepo, billRepo, txnRepo, objectMapper);
         lenient().when(txnRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
     }
@@ -154,7 +172,7 @@ class BillingServiceAttackTest {
             ConfirmPaymentRequest req = new ConfirmPaymentRequest();
             req.setOrderId(orderId);
             req.setPaymentId("pay_first");
-            req.setSignature("sig");
+            req.setSignature(computeSignature(orderId, "pay_first"));
 
             when(idempotencyService.getCachedResponse("idem-1")).thenReturn(Optional.empty());
             when(txnRepo.findAllByRazorpayOrderIdForUpdate(orderId)).thenReturn(List.of(tx));
@@ -275,7 +293,7 @@ class BillingServiceAttackTest {
                         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
                         req.setOrderId(orderId);
                         req.setPaymentId("pay_" + idx);
-                        req.setSignature("sig_" + idx);
+                        req.setSignature(computeSignature(orderId, "pay_" + idx));
                         legacyService.confirmPayment(req, "idem-concurrent-" + idx, CITIZEN_A);
                         successCount.incrementAndGet();
                     } catch (Exception e) {
@@ -807,7 +825,7 @@ class BillingServiceAttackTest {
             ConfirmPaymentRequest req = new ConfirmPaymentRequest();
             req.setOrderId(orderId);
             req.setPaymentId("pay_rollback");
-            req.setSignature("sig");
+            req.setSignature(computeSignature(orderId, "pay_rollback"));
 
             assertThatThrownBy(() -> legacyService.confirmPayment(req, "idem-rb", CITIZEN_A))
                     .isInstanceOf(OptimisticLockingFailureException.class)
@@ -1170,7 +1188,7 @@ class BillingServiceAttackTest {
             ConfirmPaymentRequest req = new ConfirmPaymentRequest();
             req.setOrderId(orderId);
             req.setPaymentId("pay_rapid");
-            req.setSignature("sig");
+            req.setSignature(computeSignature(orderId, "pay_rapid"));
 
             when(idempotencyService.getCachedResponse(idemKey)).thenReturn(Optional.empty());
             PaymentConfirmDTO first = legacyService.confirmPayment(req, idemKey, CITIZEN_A);

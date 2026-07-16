@@ -20,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +59,20 @@ class BillingFacadeServiceImplTest {
      *  verification; the UnauthorizedException they throw proves the
      *  fail-closed path is active (signature won't match the dummy secret). */
     private static final String TEST_RAZORPAY_SECRET = "test_secret_for_unit_tests";
+
+    /** Compute a valid HMAC-SHA256 signature for the given orderId|paymentId using the test secret. */
+    private static String computeSignature(String orderId, String paymentId) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(TEST_RAZORPAY_SECRET.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] hash = mac.doFinal((orderId + "|" + paymentId).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -227,7 +243,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_new");
         req.setPaymentId("pay_new");
-        req.setSignature("sig_new");
+        req.setSignature(computeSignature("order_new", "pay_new"));
 
         when(idempotencyService.getCachedResponse("idem-key-2")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_new")).thenReturn(List.of(tx));
@@ -265,7 +281,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_no_idem");
         req.setPaymentId("pay_no_idem");
-        req.setSignature("sig_no_idem");
+        req.setSignature(computeSignature("order_no_idem", "pay_no_idem"));
 
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_no_idem")).thenReturn(List.of(tx));
         when(billRepository.findById(billId)).thenReturn(Optional.of(bill));
@@ -360,7 +376,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_dupe");
         req.setPaymentId("pay_dupe");
-        req.setSignature("sig_dupe");
+        req.setSignature(computeSignature("order_dupe", "pay_dupe"));
 
         when(idempotencyService.getCachedResponse("idem-key-dupe")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_dupe")).thenReturn(List.of(tx));
@@ -409,7 +425,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_lock");
         req.setPaymentId("pay_lock");
-        req.setSignature("sig_lock");
+        req.setSignature(computeSignature("order_lock", "pay_lock"));
 
         when(idempotencyService.getCachedResponse("idem-lock")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_lock")).thenReturn(List.of(tx));
@@ -453,7 +469,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_concurrent");
         req.setPaymentId("pay_first");
-        req.setSignature("sig_first");
+        req.setSignature(computeSignature("order_concurrent", "pay_first"));
 
         when(idempotencyService.getCachedResponse("idem-c1")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_concurrent"))
@@ -504,7 +520,7 @@ class BillingFacadeServiceImplTest {
         ConfirmPaymentRequest req = new ConfirmPaymentRequest();
         req.setOrderId("order_version");
         req.setPaymentId("pay_version");
-        req.setSignature("sig_version");
+        req.setSignature(computeSignature("order_version", "pay_version"));
 
         when(idempotencyService.getCachedResponse("idem-ver")).thenReturn(Optional.empty());
         when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_version")).thenReturn(List.of(tx));
