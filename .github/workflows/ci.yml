@@ -45,6 +45,7 @@ jobs:
           SPRING_DATA_REDIS_PORT: 6379
           SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
           JPA_DDL_AUTO: update
+          RAZORPAY_SECRET: ci_test_secret_not_for_production
 
       - name: Build all modules
         run: mvn clean package -DskipTests -B

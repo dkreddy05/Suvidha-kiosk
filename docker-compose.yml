@@ -113,6 +113,8 @@ services:
       SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT: 30000
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      RAZORPAY_KEY: ${RAZORPAY_KEY:-rzp_test_placeholder}
+      RAZORPAY_SECRET: ${RAZORPAY_SECRET:-dev_test_secret_do_not_use_in_production}
       SERVER_PORT: 8082
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       JAVA_TOOL_OPTIONS: "-Xmx384m"
