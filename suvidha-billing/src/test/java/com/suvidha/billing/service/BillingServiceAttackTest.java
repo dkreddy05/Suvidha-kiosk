@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -87,6 +88,8 @@ class BillingServiceAttackTest {
     @BeforeEach
     void setUp() {
         legacyService = new BillingFacadeServiceImpl(accountRepo, billRepo, txnRepo, idempotencyService);
+        // Inject a test secret so the fail-closed guard in verifyRazorpaySignature doesn't block tests
+        ReflectionTestUtils.setField(legacyService, "razorpaySecret", "test_secret_for_attack_tests");
         specService = new BillingSpecServiceImpl(accountRepo, billRepo, txnRepo, objectMapper);
         lenient().when(txnRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
     }

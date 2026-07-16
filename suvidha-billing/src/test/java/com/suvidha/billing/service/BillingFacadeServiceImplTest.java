@@ -8,13 +8,17 @@ import com.suvidha.billing.enums.BillStatus;
 import com.suvidha.billing.exception.BusinessRuleException;
 import com.suvidha.billing.exception.UnauthorizedException;
 import com.suvidha.billing.repository.BillRepository;
+import com.suvidha.billing.repository.ServiceAccountRepository;
 import com.suvidha.billing.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -46,14 +51,138 @@ class BillingFacadeServiceImplTest {
 
     private BillingFacadeServiceImpl service;
 
+    /** A dummy secret used by tests — the actual HMAC value doesn't matter
+     *  because these are unit tests (no real Razorpay calls). Tests that
+     *  exercise confirmPayment with CREATED status will hit the signature
+     *  verification; the UnauthorizedException they throw proves the
+     *  fail-closed path is active (signature won't match the dummy secret). */
+    private static final String TEST_RAZORPAY_SECRET = "test_secret_for_unit_tests";
+
     @BeforeEach
     void setUp() {
         lenient().when(transactionRepository.findByIdempotencyKey(anyString())).thenReturn(Optional.empty());
         service = new BillingFacadeServiceImpl(
-                mock(com.suvidha.billing.repository.ServiceAccountRepository.class),
+                mock(ServiceAccountRepository.class),
                 billRepository,
                 transactionRepository,
                 idempotencyService);
+        // Inject a test secret so the fail-closed guard doesn't block business-logic tests
+        ReflectionTestUtils.setField(service, "razorpaySecret", TEST_RAZORPAY_SECRET);
+    }
+
+    // =========================================================================
+    // P0.4 — Razorpay Secret Fail-Closed Tests
+    // =========================================================================
+    @Nested
+    @DisplayName("P0.4: Razorpay Secret Fail-Closed Validation")
+    class RazorpaySecretFailClosed {
+
+        @Test
+        @DisplayName("@PostConstruct throws IllegalStateException when secret is null")
+        void startupValidation_throwsWhenSecretNull() {
+            BillingFacadeServiceImpl svc = new BillingFacadeServiceImpl(
+                    mock(ServiceAccountRepository.class),
+                    billRepository, transactionRepository, idempotencyService);
+            // razorpaySecret defaults to null (not injected)
+
+            assertThatThrownBy(svc::validateRazorpaySecret)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("RAZORPAY_SECRET is not configured");
+        }
+
+        @Test
+        @DisplayName("@PostConstruct throws IllegalStateException when secret is blank")
+        void startupValidation_throwsWhenSecretBlank() {
+            BillingFacadeServiceImpl svc = new BillingFacadeServiceImpl(
+                    mock(ServiceAccountRepository.class),
+                    billRepository, transactionRepository, idempotencyService);
+            ReflectionTestUtils.setField(svc, "razorpaySecret", "   ");
+
+            assertThatThrownBy(svc::validateRazorpaySecret)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("RAZORPAY_SECRET is not configured");
+        }
+
+        @Test
+        @DisplayName("@PostConstruct throws IllegalStateException when secret is empty string")
+        void startupValidation_throwsWhenSecretEmpty() {
+            BillingFacadeServiceImpl svc = new BillingFacadeServiceImpl(
+                    mock(ServiceAccountRepository.class),
+                    billRepository, transactionRepository, idempotencyService);
+            ReflectionTestUtils.setField(svc, "razorpaySecret", "");
+
+            assertThatThrownBy(svc::validateRazorpaySecret)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("RAZORPAY_SECRET is not configured");
+        }
+
+        @Test
+        @DisplayName("@PostConstruct succeeds when secret is configured")
+        void startupValidation_succeedsWhenSecretPresent() {
+            assertThatCode(() -> service.validateRazorpaySecret())
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("confirmPayment rejects forged signature at runtime (fail-closed)")
+        void confirmPayment_rejectsForgedSignature() {
+            UUID billId = UUID.randomUUID();
+            Transaction tx = Transaction.builder()
+                    .billId(billId)
+                    .razorpayOrderId("order_forged")
+                    .citizenId("citizen-1")
+                    .status("CREATED")
+                    .amount(BigDecimal.valueOf(100.0))
+                    .build();
+
+            ConfirmPaymentRequest req = new ConfirmPaymentRequest();
+            req.setOrderId("order_forged");
+            req.setPaymentId("pay_forged");
+            req.setSignature("completely_invalid_signature");
+
+            when(idempotencyService.getCachedResponse("idem-forged")).thenReturn(Optional.empty());
+            when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_forged"))
+                    .thenReturn(List.of(tx));
+
+            assertThatThrownBy(() -> service.confirmPayment(req, "idem-forged", "citizen-1"))
+                    .isInstanceOf(UnauthorizedException.class)
+                    .hasMessageContaining("signature verification failed");
+
+            // Transaction must NOT have been captured
+            assertThat(tx.getStatus()).isEqualTo("CREATED");
+            verify(transactionRepository, never()).saveAll(anyList());
+        }
+
+        @Test
+        @DisplayName("Runtime guard throws IllegalStateException if secret is somehow cleared")
+        void runtimeGuard_throwsWhenSecretCleared() {
+            UUID billId = UUID.randomUUID();
+            Transaction tx = Transaction.builder()
+                    .billId(billId)
+                    .razorpayOrderId("order_nosecret")
+                    .citizenId("citizen-1")
+                    .status("CREATED")
+                    .amount(BigDecimal.valueOf(100.0))
+                    .build();
+
+            ConfirmPaymentRequest req = new ConfirmPaymentRequest();
+            req.setOrderId("order_nosecret");
+            req.setPaymentId("pay_nosecret");
+            req.setSignature("any_sig");
+
+            // Simulate secret being cleared at runtime
+            ReflectionTestUtils.setField(service, "razorpaySecret", "");
+
+            when(idempotencyService.getCachedResponse("idem-nosecret")).thenReturn(Optional.empty());
+            when(transactionRepository.findAllByRazorpayOrderIdForUpdate("order_nosecret"))
+                    .thenReturn(List.of(tx));
+
+            assertThatThrownBy(() -> service.confirmPayment(req, "idem-nosecret", "citizen-1"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("RAZORPAY_SECRET not configured");
+
+            verify(transactionRepository, never()).saveAll(anyList());
+        }
     }
 
     @Test

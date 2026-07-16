@@ -15,6 +15,9 @@ import com.suvidha.billing.exception.UnauthorizedException;
 import com.suvidha.billing.repository.BillRepository;
 import com.suvidha.billing.repository.ServiceAccountRepository;
 import com.suvidha.billing.repository.TransactionRepository;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class BillingFacadeServiceImpl implements BillingFacadeService {
 
+    private static final Logger log = LoggerFactory.getLogger(BillingFacadeServiceImpl.class);
     private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final ServiceAccountRepository serviceAccountRepository;
@@ -54,6 +58,22 @@ public class BillingFacadeServiceImpl implements BillingFacadeService {
         this.billRepository = billRepository;
         this.transactionRepository = transactionRepository;
         this.idempotencyService = idempotencyService;
+    }
+
+    /**
+     * Fail-closed startup check: refuse to start the billing service if
+     * RAZORPAY_SECRET is not configured. This prevents a silent fail-open
+     * where missing config would skip signature verification entirely.
+     */
+    @PostConstruct
+    void validateRazorpaySecret() {
+        if (razorpaySecret == null || razorpaySecret.isBlank()) {
+            throw new IllegalStateException(
+                    "RAZORPAY_SECRET is not configured. "
+                    + "The billing service CANNOT start without a valid Razorpay webhook secret. "
+                    + "Set the RAZORPAY_SECRET environment variable or razorpay.secret property.");
+        }
+        log.info("Razorpay secret configured — signature verification is active");
     }
 
     @Override
@@ -220,8 +240,11 @@ public class BillingFacadeServiceImpl implements BillingFacadeService {
     }
 
     private void verifyRazorpaySignature(ConfirmPaymentRequest req) {
+        // Defence-in-depth: @PostConstruct already prevents startup without secret,
+        // but guard at runtime too — never silently skip signature verification.
         if (razorpaySecret == null || razorpaySecret.isBlank()) {
-            return;
+            throw new IllegalStateException(
+                    "RAZORPAY_SECRET not configured — refusing to process payment");
         }
         try {
             String payload = req.getOrderId() + "|" + req.getPaymentId();
