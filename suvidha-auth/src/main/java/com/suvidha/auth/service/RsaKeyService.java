@@ -3,7 +3,10 @@ package com.suvidha.auth.service;
 import com.suvidha.auth.model.JwtKeyVersion;
 import com.suvidha.auth.repo.JwtKeyVersionRepo;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -17,7 +20,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 @Service
@@ -29,8 +31,10 @@ public class RsaKeyService {
         this.jwtKeyVersionRepo = jwtKeyVersionRepo;
     }
 
-    @Scheduled(fixedDelay = 3600000)
+    @Scheduled(cron = "0 0 2 * * ?")
+    @SchedulerLock(name = "rsaKeyRotation", lockAtMostFor = "10m")
     public void rotateKeys() {
+        log.info("Running scheduled RSA key rotation check");
         if (jwtKeyVersionRepo.count() == 0) {
             log.info("No RSA keys found. Generating initial key pair...");
             generateNewKey();
@@ -39,6 +43,9 @@ public class RsaKeyService {
             if (activeKey == null || activeKey.getExpiresAt().isBefore(Instant.now())) {
                 log.info("Active RSA key is missing or expired. Rotating keys...");
                 generateNewKey();
+                log.info("Key rotation completed successfully");
+            } else {
+                log.debug("Active key {} is still valid until {}", activeKey.getKid(), activeKey.getExpiresAt());
             }
         }
     }
@@ -51,6 +58,7 @@ public class RsaKeyService {
         return jwtKeyVersionRepo.findAllByOrderByCreatedAtDesc();
     }
 
+    @Transactional
     public JwtKeyVersion generateNewKey() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
