@@ -36,7 +36,7 @@ public class IdempotencyService {
                 return Optional.of(objectMapper.readValue(json, PaymentConfirmDTO.class));
             }
         } catch (JsonProcessingException e) {
-            log.warn("Failed to deserialize cached idempotency response for key={}", idempotencyKey, e);
+            log.warn("Failed to deserialize cached idempotency response for key={}: {}", idempotencyKey, e.getMessage());
         }
         return Optional.empty();
     }
