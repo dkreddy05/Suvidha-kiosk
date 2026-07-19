@@ -1,8 +1,6 @@
 package com.suvidha.admin.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,51 +20,39 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Authentication filter that trusts gateway-injected headers instead of
+ * re-parsing JWTs. The gateway is the sole JWT verifier; downstream services
+ * authenticate via X-User-Id / X-User-Role headers that the gateway strips
+ * from external requests and re-adds after validation.
+ */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final JwtUtil jwtUtil;
-
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    public static final String HEADER_USER_ID   = "X-User-Id";
+    public static final String HEADER_USER_ROLE = "X-User-Role";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+            String userId = request.getHeader(HEADER_USER_ID);
+            String role   = request.getHeader(HEADER_USER_ROLE);
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                try {
-                    String token = authHeader.substring(7);
-                    Claims claims = jwtUtil.parseClaims(token);
-                    String citizenId = jwtUtil.extractCitizenId(claims);
-                    String role = jwtUtil.extractRole(claims);
-
-                    if (citizenId != null && !citizenId.isBlank()) {
-                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                        if (role != null && !role.isBlank()) {
-                            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-                        }
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                citizenId, null, authorities);
-                        SecurityContextHolder.getContext().setAuthentication(auth);
-                        request.setAttribute("citizenId", citizenId);
-                        request.setAttribute("role", role);
-                    }
-                } catch (ExpiredJwtException ex) {
-                    log.warn("JWT expired: {}", ex.getMessage());
-                    writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
-                    return;
-                } catch (Exception ex) {
-                    log.warn("JWT authentication failed: {}", ex.getMessage());
-                    writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-                    return;
+            if (userId != null && !userId.isBlank()) {
+                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                if (role != null && !role.isBlank()) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
                 }
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userId, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                request.setAttribute("citizenId", userId);
+                request.setAttribute("role", role);
+                log.debug("Authenticated via gateway headers: userId={}, role={}", userId, role);
             }
         }
 

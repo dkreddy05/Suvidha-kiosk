@@ -1,7 +1,6 @@
 package com.suvidha.grievance.config;
 
 import com.suvidha.grievance.security.JwtAuthenticationFilter;
-import com.suvidha.grievance.security.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,8 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public JwtAuthenticationFilter grievanceJwtAuthenticationFilter(JwtUtil jwtUtil) {
-        return new JwtAuthenticationFilter(jwtUtil);
+    public JwtAuthenticationFilter grievanceJwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
     }
 
     @Bean

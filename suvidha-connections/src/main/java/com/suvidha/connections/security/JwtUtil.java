@@ -26,10 +26,14 @@ public class JwtUtil {
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
     private static final Duration KEY_TTL = Duration.ofHours(1);
+    private static final Duration NEGATIVE_KID_TTL = Duration.ofMinutes(5);
+    private static final Duration MIN_FETCH_INTERVAL = Duration.ofSeconds(30);
 
     private final Map<String, KeyCacheEntry> rsaKeys = new ConcurrentHashMap<>();
+    private final Map<String, Instant> negativeKidCache = new ConcurrentHashMap<>();
     private final String authServiceUrl;
     private final RestTemplate restTemplate;
+    private volatile Instant lastFetchAttempt = Instant.EPOCH;
 
     public JwtUtil(@Value("${auth.service.url:http://suvidha-auth:8081}") String authServiceUrl) {
         this.authServiceUrl = authServiceUrl;
@@ -52,16 +56,20 @@ public class JwtUtil {
                 }
                 return rsaKeys.values().iterator().next().key();
             }
-            KeyCacheEntry entry = rsaKeys.get(kid);
-            if (entry == null) {
-                fetchKeys();
-                entry = rsaKeys.get(kid);
+
+            // Check negative cache — prevents DDoS via crafted kid values
+            Instant negativeCachedAt = negativeKidCache.get(kid);
+            if (negativeCachedAt != null && Instant.now().isBefore(negativeCachedAt.plus(NEGATIVE_KID_TTL))) {
+                throw new IllegalArgumentException("Unknown key id (cached negative): " + kid);
             }
+
+            KeyCacheEntry entry = rsaKeys.get(kid);
             if (entry == null || isStale(entry)) {
                 fetchKeys();
                 entry = rsaKeys.get(kid);
             }
             if (entry == null) {
+                negativeKidCache.put(kid, Instant.now());
                 throw new IllegalArgumentException("Unknown key id: " + kid);
             }
             return entry.key();
@@ -75,6 +83,11 @@ public class JwtUtil {
     }
 
     private void fetchKeys() {
+        // Rate limit: don't fetch more than once every 30 seconds
+        Instant now = Instant.now();
+        if (lastFetchAttempt.plus(MIN_FETCH_INTERVAL).isAfter(now)) return;
+        lastFetchAttempt = now;
+
         try {
             String url = authServiceUrl + "/api/auth/public-key";
             HttpHeaders headers = new HttpHeaders();
@@ -96,6 +109,7 @@ public class JwtUtil {
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         Key rsaKey = keyFactory.generatePublic(new X509EncodedKeySpec(decoded));
                         rsaKeys.put(kid, new KeyCacheEntry(rsaKey, Instant.now()));
+                        negativeKidCache.remove(kid);
                         log.debug("Cached RSA key: {}", kid);
                     }
                 }

@@ -184,7 +184,7 @@ services:
 
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       BILLING_SERVICE_URL: http://suvidha-billing:8082
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
       interval: 15s

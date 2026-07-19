@@ -1,7 +1,6 @@
 package com.suvidha.connections.config;
 
 import com.suvidha.connections.security.JwtAuthenticationFilter;
-import com.suvidha.connections.security.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,8 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public JwtAuthenticationFilter connectionsJwtAuthenticationFilter(JwtUtil jwtUtil) {
-        return new JwtAuthenticationFilter(jwtUtil);
+    public JwtAuthenticationFilter connectionsJwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
     }
 
     @Bean

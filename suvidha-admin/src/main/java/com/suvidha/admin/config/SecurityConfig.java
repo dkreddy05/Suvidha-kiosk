@@ -2,7 +2,6 @@ package com.suvidha.admin.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.suvidha.admin.security.JwtAuthenticationFilter;
-import com.suvidha.admin.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -29,8 +28,8 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Bean
-    public JwtAuthenticationFilter adminJwtAuthenticationFilter(JwtUtil jwtUtil) {
-        return new JwtAuthenticationFilter(jwtUtil);
+    public JwtAuthenticationFilter adminJwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
     }
 
     @Bean

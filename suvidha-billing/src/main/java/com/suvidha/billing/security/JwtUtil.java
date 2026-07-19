@@ -16,6 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +27,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * JWT utility for the billing service.
  * Only accepts RS256-signed tokens validated against public keys fetched from the auth service.
  * HMAC fallback has been removed to prevent token forgery attacks.
+ *
+ * Includes negative kid cache (5 min TTL) and rate-limited key fetching (30s min interval)
+ * to prevent DDoS on the auth service via crafted kid values.
  */
 @Component
 public class JwtUtil {
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
+    private static final Duration NEGATIVE_KID_TTL = Duration.ofMinutes(5);
+    private static final Duration MIN_FETCH_INTERVAL = Duration.ofSeconds(30);
+
     private final JwtProperties props;
     private final Map<String, Key> rsaKeys = new ConcurrentHashMap<>();
+    private final Map<String, Instant> negativeKidCache = new ConcurrentHashMap<>();
     private final String authServiceUrl;
     private final RestTemplate restTemplate;
+    private volatile Instant lastFetchAttempt = Instant.EPOCH;
 
     public JwtUtil(JwtProperties props,
             @Value("${auth.service.url:http://suvidha-auth:8081}") String authServiceUrl) {
@@ -61,10 +71,17 @@ public class JwtUtil {
                 throw new IllegalArgumentException("Missing key id (kid) in JWT header");
             }
 
+            // Check negative cache — prevents DDoS via crafted kid values
+            Instant negativeCachedAt = negativeKidCache.get(kid);
+            if (negativeCachedAt != null && Instant.now().isBefore(negativeCachedAt.plus(NEGATIVE_KID_TTL))) {
+                throw new IllegalArgumentException("Unknown key id (cached negative): " + kid);
+            }
+
             fetchKeysIfMissing(kid);
 
             Key rsaKey = rsaKeys.get(kid);
             if (rsaKey == null) {
+                negativeKidCache.put(kid, Instant.now());
                 throw new IllegalArgumentException(
                         "Unknown RSA key id: " + kid + ". Token cannot be validated.");
             }
@@ -80,6 +97,12 @@ public class JwtUtil {
 
     private void fetchKeysIfMissing(String kid) {
         if (rsaKeys.containsKey(kid)) return;
+
+        // Rate limit: don't fetch more than once every 30 seconds
+        Instant now = Instant.now();
+        if (lastFetchAttempt.plus(MIN_FETCH_INTERVAL).isAfter(now)) return;
+        lastFetchAttempt = now;
+
         try {
             String url = authServiceUrl + "/api/auth/public-key";
             HttpHeaders headers = new HttpHeaders();
@@ -99,6 +122,7 @@ public class JwtUtil {
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         Key rsaKey = keyFactory.generatePublic(new X509EncodedKeySpec(decoded));
                         rsaKeys.put(kId, rsaKey);
+                        negativeKidCache.remove(kId);
                         log.debug("Cached RSA key: {}", kId);
                     }
                 }

@@ -24,13 +24,20 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class JwtToken {
     private static final Logger log = LoggerFactory.getLogger(JwtToken.class);
 
     private static final Duration KEY_TTL = Duration.ofHours(1);
+    private static final Duration NEGATIVE_KID_TTL = Duration.ofMinutes(5);
     private static final String BLACKLIST_KEY_PREFIX = "jwt:blacklist:";
+
+    // Circuit breaker settings for Redis blacklist checks
+    private static final int CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5;
+    private static final Duration CIRCUIT_BREAKER_COOLDOWN = Duration.ofSeconds(30);
 
     private final String publicKeyUrl;
     private final String jwtIssuer;
@@ -39,9 +46,14 @@ public class JwtToken {
     private final WebClient webClient;
 
     private final Map<String, KeyCacheEntry> rsaKeys = new ConcurrentHashMap<>();
+    private final Map<String, Instant> negativeKidCache = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private volatile Instant lastFetchAttempt = Instant.EPOCH;
+
+    // Circuit breaker state
+    private final AtomicInteger consecutiveRedisFailures = new AtomicInteger(0);
+    private final AtomicReference<Instant> circuitOpenedAt = new AtomicReference<>(null);
 
     public JwtToken(
             @Value("${jwt.publicKeyUrl:http://localhost:8081/api/auth/public-key}") String publicKeyUrl,
@@ -90,6 +102,8 @@ public class JwtToken {
                             KeyFactory kf = KeyFactory.getInstance("RSA");
                             Key key = kf.generatePublic(new X509EncodedKeySpec(decoded));
                             rsaKeys.put(kid, new KeyCacheEntry(key, Instant.now()));
+                            // Remove from negative cache if it was previously unknown
+                            negativeKidCache.remove(kid);
                             log.info("Cached RSA key: {}", kid);
                         } catch (Exception e) {
                             log.warn("Failed to parse public key {}: {}", kid, e.getMessage());
@@ -111,8 +125,17 @@ public class JwtToken {
             }
             return rsaKeys.values().iterator().next().key();
         }
+
+        // Check negative cache first — prevents DDoS on auth service via crafted kid values
+        Instant negativeCachedAt = negativeKidCache.get(kid);
+        if (negativeCachedAt != null && Instant.now().isBefore(negativeCachedAt.plus(NEGATIVE_KID_TTL))) {
+            throw new IllegalArgumentException("Unknown key id (cached negative): " + kid);
+        }
+
         KeyCacheEntry entry = rsaKeys.get(kid);
         if (entry == null) {
+            // Kid not found even after refresh — add to negative cache
+            negativeKidCache.put(kid, Instant.now());
             throw new IllegalArgumentException("Unknown key id: " + kid);
         }
         return entry.key();
@@ -147,13 +170,53 @@ public class JwtToken {
                 });
     }
 
+    /**
+     * Checks if a JWT is blacklisted in Redis, with circuit breaker protection.
+     *
+     * Normal operation (circuit closed): fail-closed — Redis errors reject the request.
+     * During prolonged outage (circuit open): fail-open — allows requests through with a warning,
+     * re-tests Redis after a cooldown period.
+     */
     public Mono<Boolean> isBlacklisted(String jti) {
         if (jti == null || jti.isBlank()) {
             return Mono.just(false);
         }
+
+        // Circuit breaker: check if circuit is open
+        Instant openedAt = circuitOpenedAt.get();
+        if (openedAt != null) {
+            if (Instant.now().isBefore(openedAt.plus(CIRCUIT_BREAKER_COOLDOWN))) {
+                // Circuit is open — fail-open (allow request, log warning)
+                log.warn("Redis circuit breaker OPEN — allowing request without blacklist check for jti={}", jti);
+                return Mono.just(false);
+            }
+            // Cooldown elapsed — try half-open (reset and test Redis)
+            log.info("Redis circuit breaker attempting half-open reset");
+            circuitOpenedAt.set(null);
+            consecutiveRedisFailures.set(0);
+        }
+
         return redisTemplate.hasKey(BLACKLIST_KEY_PREFIX + jti)
+                .doOnNext(result -> {
+                    // Successful Redis call — reset circuit breaker
+                    consecutiveRedisFailures.set(0);
+                    circuitOpenedAt.set(null);
+                })
                 .onErrorResume(e -> {
-                    log.error("Redis blacklist check failed — denying request (fail-closed): {}", e.getMessage());
+                    int failures = consecutiveRedisFailures.incrementAndGet();
+                    if (failures >= CIRCUIT_BREAKER_FAILURE_THRESHOLD) {
+                        // Trip the circuit
+                        circuitOpenedAt.set(Instant.now());
+                        log.error("Redis circuit breaker TRIPPED after {} consecutive failures — " +
+                                "will fail-open for {}s: {}",
+                                failures, CIRCUIT_BREAKER_COOLDOWN.getSeconds(), e.getMessage());
+                        // Fail-open when circuit trips: allow the request
+                        return Mono.just(false);
+                    }
+                    // Below threshold: maintain fail-closed behavior (security > availability)
+                    log.error("Redis blacklist check failed ({}/{} before circuit trip) — " +
+                            "denying request (fail-closed): {}",
+                            failures, CIRCUIT_BREAKER_FAILURE_THRESHOLD, e.getMessage());
                     return Mono.just(true);
                 });
     }

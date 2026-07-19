@@ -30,9 +30,12 @@ public class JwtUtil {
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
     private static final Duration KEY_TTL = Duration.ofHours(1);
+    private static final Duration NEGATIVE_KID_TTL = Duration.ofMinutes(5);
+    private static final Duration MIN_FETCH_INTERVAL = Duration.ofSeconds(30);
 
     private final String authServiceUrl;
     private final Map<String, KeyCacheEntry> rsaKeys = new ConcurrentHashMap<>();
+    private final Map<String, Instant> negativeKidCache = new ConcurrentHashMap<>();
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private volatile Instant lastFetchAttempt = Instant.EPOCH;
@@ -48,7 +51,8 @@ public class JwtUtil {
                 .anyMatch(e -> now.isAfter(e.fetchedAt().plus(KEY_TTL)));
         if (!anyStale && !rsaKeys.isEmpty()) return;
 
-        if (lastFetchAttempt.plusSeconds(30).isAfter(now)) return;
+        // Rate limit: don't fetch more than once every 30 seconds
+        if (lastFetchAttempt.plus(MIN_FETCH_INTERVAL).isAfter(now)) return;
         lastFetchAttempt = now;
 
         log.info("Fetching RSA public keys from auth service");
@@ -75,6 +79,7 @@ public class JwtUtil {
                         KeyFactory kf = KeyFactory.getInstance("RSA");
                         Key key = kf.generatePublic(new X509EncodedKeySpec(decoded));
                         rsaKeys.put(kid, new KeyCacheEntry(key, Instant.now()));
+                        negativeKidCache.remove(kid);
                         log.debug("Cached RSA key: {}", kid);
                     }
                 }
@@ -103,8 +108,16 @@ public class JwtUtil {
                 }
                 return rsaKeys.values().iterator().next().key();
             }
+
+            // Check negative cache — prevents DDoS via crafted kid values
+            Instant negativeCachedAt = negativeKidCache.get(kid);
+            if (negativeCachedAt != null && Instant.now().isBefore(negativeCachedAt.plus(NEGATIVE_KID_TTL))) {
+                throw new IllegalArgumentException("Unknown key id (cached negative): " + kid);
+            }
+
             KeyCacheEntry entry = rsaKeys.get(kid);
             if (entry == null) {
+                negativeKidCache.put(kid, Instant.now());
                 throw new IllegalArgumentException("Unknown key id: " + kid);
             }
             return entry.key();

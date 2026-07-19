@@ -18,8 +18,10 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
     @Query("SELECT e FROM OutboxEvent e WHERE e.status = :status ORDER BY e.createdAt ASC")
     List<OutboxEvent> findByStatusOrderByCreatedAtAsc(@Param("status") OutboxStatus status);
 
-    @Query("SELECT e FROM OutboxEvent e WHERE e.status = 'PENDING' ORDER BY e.createdAt ASC LIMIT :limit")
-    List<OutboxEvent> findPendingEvents(@Param("limit") int limit);
+    @Query(value = "SELECT * FROM outbox_event WHERE status = 'PENDING' " +
+            "ORDER BY created_at ASC LIMIT :limit FOR UPDATE SKIP LOCKED",
+            nativeQuery = true)
+    List<OutboxEvent> findPendingEventsForUpdate(@Param("limit") int limit);
 
     @Modifying
     @Query("DELETE FROM OutboxEvent e WHERE e.status = 'COMPLETED' AND e.processedAt < :before")
