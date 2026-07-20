@@ -87,8 +87,10 @@ public class ConnectionRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConnectionRequestSummaryResponse> myRequests(String citizenId) {
-        List<ConnectionRequest> reqs = connectionRequestRepository.findByCitizenIdOrderBySubmittedAtDesc(citizenId);
+    public List<ConnectionRequestSummaryResponse> myRequests(String citizenId, org.springframework.data.domain.Pageable pageable) {
+        List<ConnectionRequest> reqs = pageable != null
+                ? connectionRequestRepository.findByCitizenIdOrderBySubmittedAtDesc(citizenId, pageable)
+                : connectionRequestRepository.findByCitizenIdOrderBySubmittedAtDesc(citizenId);
         return reqs.stream()
                 .map(r -> new ConnectionRequestSummaryResponse(
                         r.getDisplayId(),
@@ -97,6 +99,11 @@ public class ConnectionRequestService {
                         r.getStatus(),
                         r.getSubmittedAt()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConnectionRequestSummaryResponse> myRequests(String citizenId) {
+        return myRequests(citizenId, null);
     }
 
     @Transactional(readOnly = true)

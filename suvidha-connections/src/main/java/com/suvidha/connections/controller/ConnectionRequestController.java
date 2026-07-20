@@ -38,8 +38,11 @@ public class ConnectionRequestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ConnectionRequestSummaryResponse>> myRequests() {
-        return ResponseEntity.ok(connectionRequestService.myRequests(currentCitizenId()));
+    public ResponseEntity<List<ConnectionRequestSummaryResponse>> myRequests(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, Math.min(size, 100));
+        return ResponseEntity.ok(connectionRequestService.myRequests(currentCitizenId(), pageable));
     }
 
     @GetMapping("/{requestId}")

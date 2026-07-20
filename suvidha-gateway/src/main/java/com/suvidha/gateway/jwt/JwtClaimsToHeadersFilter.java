@@ -76,7 +76,7 @@ public class JwtClaimsToHeadersFilter implements GlobalFilter, Ordered {
                                 jwtFailureCounter.increment();
                                 log.warn("JWT is blacklisted (logout): jti={}", claims.getId());
                                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                                return exchange.getResponse().setComplete();
+                                return exchange.getResponse().<Boolean>setComplete().then(Mono.just(false));
                             }
 
                             String citizenId = extractString(claims, "citizenId", claims.getSubject());
@@ -96,7 +96,7 @@ public class JwtClaimsToHeadersFilter implements GlobalFilter, Ordered {
                                 if (notBlank(language)) h.add(HEADER_USER_LANGUAGE,  language);
                             });
 
-                            return chain.filter(exchange.mutate().request(reqBuilder.build()).build());
+                            return Mono.just(true);
                         }))
                 .onErrorResume(ResponseStatusException.class, e -> {
                     jwtFailureCounter.increment();
@@ -106,6 +106,12 @@ public class JwtClaimsToHeadersFilter implements GlobalFilter, Ordered {
                 .onErrorResume(e -> {
                     jwtFailureCounter.increment();
                     log.warn("JWT validation failed: {} — {}", e.getClass().getSimpleName(), e.getMessage());
+                    return Mono.just(false);
+                })
+                .flatMap(proceed -> {
+                    if (Boolean.FALSE.equals(proceed) && exchange.getResponse().isCommitted()) {
+                        return Mono.empty();
+                    }
                     return chain.filter(exchange.mutate().request(reqBuilder.build()).build());
                 });
     }

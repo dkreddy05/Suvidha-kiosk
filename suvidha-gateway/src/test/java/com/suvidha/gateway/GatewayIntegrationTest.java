@@ -29,6 +29,7 @@ import java.util.Collections;
         "spring.cloud.gateway.routes[0].id=test-route",
         "spring.cloud.gateway.routes[0].uri=http://localhost:8089",
         "spring.cloud.gateway.routes[0].predicates[0]=Path=/api/test/**",
+        "spring.cloud.gateway.httpclient.response-timeout=2000",
         "spring.cloud.gateway.routes[0].metadata.response-timeout=2000"
     }
 )
@@ -62,6 +63,7 @@ class GatewayIntegrationTest {
                 .thenReturn(Mono.just(new RedisRateLimiter.Response(true, Collections.emptyMap())));
 
         Claims claims = mock(Claims.class);
+        when(claims.getId()).thenReturn("test-jti");
         when(claims.getSubject()).thenReturn("9876543210");
         when(claims.get("role", String.class)).thenReturn("USER");
         when(jwtToken.validateAsync(anyString())).thenReturn(Mono.just(claims));

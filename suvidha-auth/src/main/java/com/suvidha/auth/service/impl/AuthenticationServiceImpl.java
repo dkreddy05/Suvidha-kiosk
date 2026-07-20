@@ -1,5 +1,7 @@
 package com.suvidha.auth.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.suvidha.auth.service.AuthenticationService;
@@ -11,6 +13,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.nio.charset.StandardCharsets;
 import com.suvidha.auth.Dto.VerifyOtpResponse;
 import com.suvidha.auth.model.Citizen;
@@ -28,6 +31,8 @@ import com.suvidha.auth.repo.CitizenRepo;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+
     private StringRedisTemplate template;
     private CitizenRepo citizenRepo;
     private final SecureRandom secureRandom;
@@ -38,6 +43,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private static final Duration RATE_LIMIT_TTL = Duration.ofMinutes(15);
     private static final Duration OTP_TTL = Duration.ofMinutes(5);
     private static final Duration VERIFIED_SESSION_TTL = Duration.ofMinutes(10);
+
+    private final Map<String, FallbackOtpEntry> fallbackOtpStore = new ConcurrentHashMap<>();
+
+    private record FallbackOtpEntry(String hashedOtp, String mobile, int attempts, Instant expiresAt) {}
 
     public AuthenticationServiceImpl(StringRedisTemplate template,
             CitizenRepo citizenRepo, JwtToken jwtToken) {
@@ -102,7 +111,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (OtpRateLimitExceededException | InvalidRequestException e) {
             throw e;
         } catch (Exception e) {
-            throw new OtpSendFailedException("Failed to send OTP. Please try again.", e);
+            log.warn("Redis unavailable during sendOtp ({}), activating in-memory/DB fallback", e.getMessage());
+            String otp = String.format("%06d", secureRandom.nextInt(900000) + 100000);
+            String hashedOtp = hashOtp(otp);
+            fallbackOtpStore.put(sessionId, new FallbackOtpEntry(hashedOtp, mobile, 0, Instant.now().plus(OTP_TTL)));
+            if (devOtp != null) {
+                devOtp.append(otp);
+            }
+            return sessionId;
         }
     }
 
@@ -114,65 +130,106 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String otpKey = OTP_PREFIX + ":" + sessionId;
+        Map<Object, Object> hp = null;
         try {
-            Map<Object, Object> hp = template.opsForHash().entries(otpKey);
-            if (hp.isEmpty()) {
-                throw new OtpSessionInvalidException("Invalid or expired OTP session.");
-            }
+            hp = template.opsForHash().entries(otpKey);
+        } catch (Exception e) {
+            log.warn("Redis unavailable during verifyOtp ({}), falling back to in-memory store", e.getMessage());
+        }
 
-            String storedMobile = (String) hp.get("mobile");
-            if (storedMobile == null) {
-                throw new OtpMobileMismatchException("Mobile number does not match OTP session.");
-            }
-
-            int attempts = Integer.parseInt(hp.getOrDefault("attempts", "0").toString());
-            if (attempts >= MAX_ATTEMPTS) {
-                template.delete(otpKey);
-                throw new OtpMaxAttemptsExceededException("Max OTP attempts exceeded. Please request a new OTP.");
-            }
-
-            String storedOtp = (String) hp.get("otp");
-            if (storedOtp == null) {
-                template.delete(otpKey);
-                throw new OtpSessionInvalidException("Invalid or expired OTP session.");
-            }
-
-            if (!hashOtp(otp).equals(storedOtp)) {
-                attempts++;
-                template.opsForHash().put(otpKey, "attempts", String.valueOf(attempts));
-                if (attempts >= MAX_ATTEMPTS) {
-                    template.delete(otpKey);
-                    throw new OtpMaxAttemptsExceededException(
-                            "Max OTP attempts exceeded. Please request a new OTP.");
+        try {
+            if (hp != null && !hp.isEmpty()) {
+                String storedMobile = (String) hp.get("mobile");
+                if (storedMobile == null) {
+                    throw new OtpMobileMismatchException("Mobile number does not match OTP session.");
                 }
 
-                int remaining = MAX_ATTEMPTS - attempts;
-                throw new OtpIncorrectException("Incorrect OTP.", remaining);
-            }
+                int attempts = Integer.parseInt(hp.getOrDefault("attempts", "0").toString());
+                if (attempts >= MAX_ATTEMPTS) {
+                    template.delete(otpKey);
+                    throw new OtpMaxAttemptsExceededException("Max OTP attempts exceeded. Please request a new OTP.");
+                }
 
-            String sessionKey = SESSION_PREFIX + ":" + sessionId;
-            Map<String, String> sessionData = new HashMap<>();
-            sessionData.put("status", "VERIFIED");
-            sessionData.put("mobile", storedMobile);
-            sessionData.put("verifiedAt", Instant.now().toString());
-            template.opsForHash().putAll(sessionKey, sessionData);
-            template.expire(sessionKey, VERIFIED_SESSION_TTL);
-            template.delete(otpKey);
-            Citizen citizen = citizenRepo.findByMobile(storedMobile).orElse(null);
-            String citizenId = citizen != null ? citizen.getId() : storedMobile;
-            String role = citizen != null && citizen.getRole() != null
-                ? citizen.getRole().name()
-                : "USER";
-            String token = jwtToken.generateToken(
-                citizenId,
-                storedMobile,
-                citizen != null ? citizen.getName() : "",
-                role
-            );
-            if (citizen == null) {
-                return new VerifyOtpResponse(storedMobile, true, false, token);
+                String storedOtp = (String) hp.get("otp");
+                if (storedOtp == null) {
+                    template.delete(otpKey);
+                    throw new OtpSessionInvalidException("Invalid or expired OTP session.");
+                }
+
+                if (!hashOtp(otp).equals(storedOtp)) {
+                    attempts++;
+                    template.opsForHash().put(otpKey, "attempts", String.valueOf(attempts));
+                    if (attempts >= MAX_ATTEMPTS) {
+                        template.delete(otpKey);
+                        throw new OtpMaxAttemptsExceededException(
+                                "Max OTP attempts exceeded. Please request a new OTP.");
+                    }
+
+                    int remaining = MAX_ATTEMPTS - attempts;
+                    throw new OtpIncorrectException("Incorrect OTP.", remaining);
+                }
+
+                String sessionKey = SESSION_PREFIX + ":" + sessionId;
+                Map<String, String> sessionData = new HashMap<>();
+                sessionData.put("status", "VERIFIED");
+                sessionData.put("mobile", storedMobile);
+                sessionData.put("verifiedAt", Instant.now().toString());
+                template.opsForHash().putAll(sessionKey, sessionData);
+                template.expire(sessionKey, VERIFIED_SESSION_TTL);
+                template.delete(otpKey);
+                Citizen citizen = citizenRepo.findByMobile(storedMobile).orElse(null);
+                String citizenId = citizen != null ? citizen.getId() : storedMobile;
+                String role = citizen != null && citizen.getRole() != null
+                    ? citizen.getRole().name()
+                    : "USER";
+                String token = jwtToken.generateToken(
+                    citizenId,
+                    storedMobile,
+                    citizen != null ? citizen.getName() : "",
+                    role
+                );
+                if (citizen == null) {
+                    return new VerifyOtpResponse(storedMobile, true, false, token);
+                }
+                return new VerifyOtpResponse(storedMobile, true, true, token);
+            } else {
+                FallbackOtpEntry entry = fallbackOtpStore.get(sessionId);
+                if (entry == null || Instant.now().isAfter(entry.expiresAt())) {
+                    fallbackOtpStore.remove(sessionId);
+                    throw new OtpSessionInvalidException("Invalid or expired OTP session.");
+                }
+
+                if (entry.attempts() >= MAX_ATTEMPTS) {
+                    fallbackOtpStore.remove(sessionId);
+                    throw new OtpMaxAttemptsExceededException("Max OTP attempts exceeded. Please request a new OTP.");
+                }
+
+                if (!hashOtp(otp).equals(entry.hashedOtp())) {
+                    int nextAttempts = entry.attempts() + 1;
+                    if (nextAttempts >= MAX_ATTEMPTS) {
+                        fallbackOtpStore.remove(sessionId);
+                        throw new OtpMaxAttemptsExceededException("Max OTP attempts exceeded. Please request a new OTP.");
+                    }
+                    fallbackOtpStore.put(sessionId, new FallbackOtpEntry(entry.hashedOtp(), entry.mobile(), nextAttempts, entry.expiresAt()));
+                    int remaining = MAX_ATTEMPTS - nextAttempts;
+                    throw new OtpIncorrectException("Incorrect OTP.", remaining);
+                }
+
+                fallbackOtpStore.remove(sessionId);
+                String storedMobile = entry.mobile();
+                Citizen citizen = citizenRepo.findByMobile(storedMobile).orElse(null);
+                String citizenId = citizen != null ? citizen.getId() : storedMobile;
+                String role = citizen != null && citizen.getRole() != null
+                    ? citizen.getRole().name()
+                    : "USER";
+                String token = jwtToken.generateToken(
+                    citizenId,
+                    storedMobile,
+                    citizen != null ? citizen.getName() : "",
+                    role
+                );
+                return new VerifyOtpResponse(storedMobile, true, citizen != null, token);
             }
-            return new VerifyOtpResponse(storedMobile, true, true, token);
         } catch (InvalidRequestException | OtpSessionInvalidException | OtpMobileMismatchException
                 | OtpMaxAttemptsExceededException | OtpIncorrectException e) {
             throw e;

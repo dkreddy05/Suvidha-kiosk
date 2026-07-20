@@ -70,6 +70,8 @@ public class JwtToken {
 
     private Mono<Void> refreshKeysAsync() {
         Instant now = Instant.now();
+        negativeKidCache.entrySet().removeIf(entry -> now.isAfter(entry.getValue().plus(NEGATIVE_KID_TTL)));
+
         boolean anyStale = rsaKeys.values().stream()
                 .anyMatch(e -> now.isAfter(e.fetchedAt().plus(KEY_TTL)));
         if (!anyStale && !rsaKeys.isEmpty()) return Mono.empty();

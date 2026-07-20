@@ -78,7 +78,7 @@ services:
       AADHAR_BLIND_INDEX_KEY: ${AADHAR_BLIND_INDEX_KEY:-suvidha-dev-blind-index-pepper-32b}
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SERVER_PORT: 8081
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     volumes:
       - ./logs/auth-service:/workspace/logs
     depends_on:
@@ -117,7 +117,7 @@ services:
       RAZORPAY_SECRET: ${RAZORPAY_SECRET:-dev_test_secret_do_not_use_in_production}
       SERVER_PORT: 8082
       AUTH_SERVICE_URL: http://suvidha-auth:8081
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     depends_on:
       postgres:
         condition: service_healthy
@@ -151,7 +151,7 @@ services:
       SERVER_PORT: 8083
 
       AUTH_SERVICE_URL: http://suvidha-auth:8081
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
@@ -184,7 +184,7 @@ services:
 
       AUTH_SERVICE_URL: http://suvidha-auth:8081
       BILLING_SERVICE_URL: http://suvidha-billing:8082
-      JAVA_TOOL_OPTIONS: "-Xmx512m"
+      JAVA_TOOL_OPTIONS: "-Xmx768m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
       interval: 15s
@@ -216,7 +216,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8085
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     volumes:
       - ./logs/notification-service:/workspace/logs
     depends_on:
@@ -253,7 +253,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8086
       AUTH_SERVICE_URL: http://suvidha-auth:8081
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
       interval: 15s
@@ -292,7 +292,7 @@ services:
       CONNECTIONS_SERVICE_URL: http://suvidha-connections:8084
       NOTIFICATION_SERVICE_URL: http://suvidha-notification:8085
       ADMIN_SERVICE_URL: http://suvidha-admin:8086
-      JAVA_TOOL_OPTIONS: "-Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     depends_on:
       postgres:
         condition: service_healthy
